@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}MSUEdu AI – Peer Tutoring Platform{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Learn together, with AI to help.</h1>
+  <p>MSUEdu AI connects students who need academic help with peer tutors, and offers an AI
+     learning assistant for explanations, quizzes and study guidance.</p>
+  <p class="hero-actions">
+    {% if g.user %}
+      <a class="btn" href="{{ url_for('account.dashboard') }}">Go to my dashboard</a>
+    {% else %}
+      <a class="btn" href="{{ url_for('auth.register') }}">Create an account</a>
+      <a class="btn btn-outline" href="{{ url_for('auth.login') }}">Log in</a>
+    {% endif %}
+  </p>
+</section>
+
+<section aria-labelledby="how-title">
+  <h2 id="how-title">How it works</h2>
+  <ol class="steps">
+    <li><strong>Find a tutor.</strong> Search by subject, topic or day, or use guided matching.
+        You only see tutors an administrator has approved.</li>
+    <li><strong>Request a session.</strong> Review your request, then confirm. The tutor accepts,
+        declines or suggests another time. Nothing is booked twice.</li>
+    <li><strong>Learn and reflect.</strong> Practise with AI-written quizzes, ask the AI assistant,
+        and read your tutor's session notes.</li>
+  </ol>
+</section>
+
+{% if show_status %}
+<section aria-labelledby="status-title">
+  <h2 id="status-title">System status <small>(development only)</small></h2>
+  {% if db_ok %}
+    <p class="status ok" role="status">✔ {{ db_message }}</p>
+  {% else %}
+    <p class="status error" role="alert">✖ {{ db_message }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section aria-labelledby="roles-title">
+  <h2 id="roles-title">Who is it for?</h2>
+  <div class="grid">
+    <article class="card">
+      <h3>Students</h3>
+      <p>Find tutors, request sessions, practise with quizzes, and use an AI coordinator that
+         prepares bookings for your confirmation.</p>
+    </article>
+    <article class="card">
+      <h3>Peer tutors</h3>
+      <p>Share your subjects and weekly availability, manage requests, and record what each session covered.</p>
+    </article>
+    <article class="card">
+      <h3>Administrators</h3>
+      <p>Review tutors, manage accounts and subjects, monitor requests and moderate feedback.</p>
+    </article>
+  </div>
+  <p class="note">AI can make mistakes. It never books, cancels or changes anything without your confirmation.
+     <a href="{{ url_for('main.about') }}">About this project and privacy</a></p>
+</section>
+{% endblock %}

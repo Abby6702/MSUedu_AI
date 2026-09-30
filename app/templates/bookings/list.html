@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "partials/request_card.html" import request_card %}
+{% block title %}{{ title }} – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<p><a href="{{ url_for('account.dashboard') }}">← Back to dashboard</a>
+  {% if viewer == 'student' %} · <a href="{{ url_for('student.find_tutors') }}">Find a tutor</a>{% endif %}</p>
+<p class="hint">All times are Philippine time.</p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+<h2>Open requests</h2>
+{% for r in groups.attention %}{{ request_card(r, viewer) }}
+{% else %}<p class="empty">Nothing waiting for a reply.</p>{% endfor %}
+
+<h2>Upcoming sessions</h2>
+{% for r in groups.upcoming %}{{ request_card(r, viewer) }}
+{% else %}<p class="empty">No confirmed sessions yet.</p>{% endfor %}
+
+<h2>History</h2>
+{% for r in groups.history %}{{ request_card(r, viewer) }}
+{% else %}<p class="empty">Completed, declined and cancelled requests will appear here.</p>{% endfor %}
+{% endblock %}

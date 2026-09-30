@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Reminder settings – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Reminder settings</h1>
+  <p><a href="{{ url_for('notifications.index') }}">← Back to notifications</a></p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="choice"><input type="checkbox" name="reminders_enabled" {% if enabled %}checked{% endif %}>
+      Remind me before my confirmed sessions</label>
+    <p class="hint">Reminders appear in your notifications. Updates about requests are always sent.</p>
+    <button class="btn" type="submit">Save</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Session feedback – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Feedback on your session</h1>
+  <p><a href="{{ url_for('bookings.my_requests') }}">← Back to my requests</a></p>
+  <div class="card">
+    <p><strong>{{ s.subject_name }}:</strong> {{ s.topic }}</p>
+    <p class="meta">Tutor: {{ s.tutor_name }} · {{ s.start_at|local_range(s.end_at) }}</p>
+  </div>
+
+  {% if record %}
+    <h2>Your tutor's notes</h2>
+    <p><strong>Topics covered:</strong> {{ record.topics_covered }}</p>
+    <p class="preline"><strong>Learning outcomes:</strong> {{ record.outcomes }}</p>
+    {% if record.next_steps %}<p class="preline"><strong>Next steps:</strong> {{ record.next_steps }}</p>{% endif %}
+  {% endif %}
+
+  {% if existing %}
+    <div class="flash flash-info">You already sent feedback for this session: <strong>{{ existing.rating }} / 5</strong>.
+      {% if existing.comment %}<span class="preline">“{{ existing.comment }}”</span>{% endif %}</div>
+  {% else %}
+    {% include "partials/errors.html" %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <fieldset>
+        <legend>How helpful was the session?</legend>
+        {% for n, label in [(5, 'Very helpful'), (4, 'Helpful'), (3, 'Okay'), (2, 'Not very helpful'), (1, 'Not helpful')] %}
+          <label class="choice"><input type="radio" name="rating" value="{{ n }}" required
+            {% if data.get('rating') == n %}checked{% endif %}> {{ n }} – {{ label }}</label>
+        {% endfor %}
+      </fieldset>
+
+      <label for="comment">Comment (optional)</label>
+      <textarea id="comment" name="comment" rows="4" maxlength="1000">{{ data.get('comment') or '' }}</textarea>
+      <p class="hint">Your tutor sees your rating and comment <strong>without your name</strong>, and
+        other students may see the comment on the tutor's profile. Feedback cannot be edited after
+        it is sent. Please be respectful and do not include private information.</p>
+      <button class="btn" type="submit">Send feedback</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

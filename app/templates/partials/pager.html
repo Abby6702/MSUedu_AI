@@ -1,0 +1,9 @@
+{% if pager.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if pager.prev %}<a class="btn btn-small btn-outline" href="{{ pager.prev }}">← Previous</a>{% endif %}
+  <span>Page {{ pager.page }} of {{ pager.pages }} ({{ pager.total }} total)</span>
+  {% if pager.next %}<a class="btn btn-small btn-outline" href="{{ pager.next }}">Next →</a>{% endif %}
+</nav>
+{% else %}
+  <p class="hint">{{ pager.total }} total</p>
+{% endif %}

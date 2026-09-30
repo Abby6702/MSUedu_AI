@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}AI learning assistant – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>AI learning assistant</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a></p>
+
+<div id="assistant"
+     data-csrf="{{ csrf_token() }}"
+     data-chat-url="{{ url_for('assistant.chat') }}"
+     data-summarize-url="{{ url_for('assistant.summarize') }}"
+     data-status-url="{{ url_for('assistant.status') }}">
+
+  <div id="aiBanner" class="flash flash-error" role="alert" hidden></div>
+
+  <p class="hint">AI answers can contain mistakes. Check important information with your
+    textbook, instructor or a tutor. Conversations are not saved on the server. Please do not
+    type passwords or private information.</p>
+
+  <div class="tab-buttons" role="tablist">
+    <button type="button" class="tab-btn active" id="tabChat" role="tab" aria-selected="true"
+            aria-controls="panelChat">Ask a question</button>
+    <button type="button" class="tab-btn" id="tabSummary" role="tab" aria-selected="false"
+            aria-controls="panelSummary">Summarize notes</button>
+  </div>
+
+  <!-- Chat -->
+  <section id="panelChat" class="card" role="tabpanel" aria-labelledby="tabChat">
+    <div class="filter-form">
+      <div><label for="chatSubject">Subject (optional)</label>
+        <select id="chatSubject">
+          <option value="">No specific subject</option>
+          {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+        </select></div>
+      <div><label for="chatTopic">Topic (optional)</label>
+        <input id="chatTopic" type="text" maxlength="100" placeholder="e.g. derivatives"></div>
+    </div>
+
+    <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation">
+      <p class="empty" id="chatEmpty">Ask anything about your studies to begin.</p>
+    </div>
+
+    <label for="chatInput">Your question</label>
+    <textarea id="chatInput" rows="3" maxlength="{{ max_message }}"
+              placeholder="Explain how to find the limit of…"></textarea>
+    <p class="review-actions">
+      <button type="button" class="btn" id="chatSend">Send</button>
+      <button type="button" class="btn btn-outline" id="chatClear">New conversation</button>
+    </p>
+    <p class="hint" id="chatBusy" hidden>Thinking… the first answer can take a minute while the model loads.</p>
+  </section>
+
+  <!-- Summarize -->
+  <section id="panelSummary" class="card" role="tabpanel" aria-labelledby="tabSummary" hidden>
+    <label for="notesInput">Paste your notes</label>
+    <textarea id="notesInput" rows="8" maxlength="{{ max_notes }}"></textarea>
+    <label for="summaryLength">Length</label>
+    <select id="summaryLength">
+      <option value="brief">Brief (bullet points)</option>
+      <option value="detailed">Detailed study summary</option>
+    </select>
+    <p class="review-actions"><button type="button" class="btn" id="summarySend">Summarize</button></p>
+    <p class="hint" id="summaryBusy" hidden>Summarizing… this can take a minute.</p>
+    <div id="summaryError" class="flash flash-error" role="alert" hidden></div>
+    <div id="summaryOut" class="msg msg-ai" hidden></div>
+  </section>
+</div>
+
+<script src="{{ url_for('static', filename='js/assistant.js') }}"></script>
+{% endblock %}

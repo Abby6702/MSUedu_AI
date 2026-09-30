@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Notifications – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Notifications</h1>
+<p><a href="{{ url_for('account.dashboard') }}">← Back to dashboard</a> ·
+   <a href="{{ url_for('notifications.settings') }}">Reminder settings</a></p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+{% if items %}
+  <form method="post" action="{{ url_for('notifications.read_all') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-small btn-outline" type="submit">Mark all as read</button>
+  </form>
+  {% for n in items %}
+  <article class="card notif {{ '' if n.is_read else 'unread' }}">
+    <h2 class="card-title">{% if not n.is_read %}<span class="dot" role="img" aria-label="Unread"></span>{% endif %}{{ n.title }}</h2>
+    <p>{{ n.body }}</p>
+    <p class="meta">{{ n.created_at|local_dt }} (PH time)</p>
+    <div class="review-actions">
+      {% if n.link %}<a class="btn btn-small" href="{{ url_for('notifications.open_notification', notification_id=n.id) }}">Open</a>{% endif %}
+      {% if not n.is_read %}
+      <form method="post" action="{{ url_for('notifications.read', notification_id=n.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-small btn-outline" type="submit">Mark read</button>
+      </form>
+      {% endif %}
+    </div>
+  </article>
+  {% endfor %}
+{% elif not error %}
+  <p class="empty">No notifications yet. You will see request updates and session reminders here.</p>
+{% endif %}
+{% endblock %}

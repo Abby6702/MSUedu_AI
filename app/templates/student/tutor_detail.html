@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ tutor.full_name }} – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('student.find_tutors') }}">← Back to search</a></p>
+<section class="auth-card wide">
+  <h1>{{ tutor.full_name }}</h1>
+  <p class="meta">{{ tutor.course or 'Course not set' }}{% if tutor.year_level %} · Year {{ tutor.year_level }}{% endif %}
+    · {{ format_labels[tutor.tutoring_format] }}</p>
+
+  <h2>About</h2>
+  <p class="preline">{{ tutor.bio or 'This tutor has not written a biography yet.' }}</p>
+
+  <h2>Subjects</h2>
+  {% if tutor.subjects %}
+    <ul>{% for s in tutor.subjects %}
+      <li><strong>{{ s.name }}</strong>{% if s.topics %} – {{ s.topics }}{% endif %}</li>
+    {% endfor %}</ul>
+  {% else %}<p class="empty">No subjects listed.</p>{% endif %}
+
+  <h2>Weekly availability</h2>
+  {% if tutor.availability %}
+    <ul>{% for a in tutor.availability %}<li>{{ a.day_name }}: {{ a.label }}</li>{% endfor %}</ul>
+    <p class="hint">Weekly hours in Philippine time. A session is only confirmed after the tutor accepts your request.</p>
+  {% else %}<p class="empty">No availability listed.</p>{% endif %}
+
+  <h2>Feedback from students</h2>
+  {% if rating and rating.n %}
+    <p><strong>{{ rating.avg }} / 5</strong> from {{ rating.n }} rating{{ '' if rating.n == 1 else 's' }}.</p>
+    {% for f in feedback_items if f.comment %}
+      <blockquote class="feedback-quote">
+        <p class="preline">{{ f.comment }}</p>
+        <footer class="meta">{{ f.rating }} / 5 · {{ f.subject_name }} · {{ f.created_at|local_dt }}</footer>
+      </blockquote>
+    {% endfor %}
+    <p class="hint">Feedback is anonymous and written by students. It reflects individual experiences.</p>
+  {% else %}
+    <p class="empty">No feedback yet.</p>
+  {% endif %}
+
+  {% if tutor.subjects and tutor.availability %}
+    <p><a class="btn" href="{{ url_for('bookings.new_request', tutor_id=tutor.id) }}">Request a session</a></p>
+  {% else %}
+    <p class="empty">This tutor cannot receive requests until they list subjects and availability.</p>
+  {% endif %}
+</section>
+{% endblock %}

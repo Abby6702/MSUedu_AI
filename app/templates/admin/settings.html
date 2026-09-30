@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Platform settings – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<section class="auth-card wide">
+  <h2>Platform settings</h2>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="announcement">Announcement banner (optional)</label>
+    <input id="announcement" name="announcement" type="text" maxlength="{{ max_length }}"
+           value="{{ current.announcement }}">
+    <p class="hint">Shown at the top of every page, as plain text (up to {{ max_length }} characters).
+      Leave empty to hide it. Changes appear for everyone within about 30 seconds.</p>
+
+    <label class="choice"><input type="checkbox" name="registration_open"
+      {% if current.registration_open == 'true' %}checked{% endif %}> Allow new registrations</label>
+    <p class="hint">When switched off, nobody can create a new account. Existing accounts are not affected.</p>
+
+    <button class="btn" type="submit">Save settings</button>
+  </form>
+</section>
+{% endblock %}

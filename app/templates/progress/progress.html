@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}My progress – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>My learning progress</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a></p>
+<div class="flash flash-info">This page shows your activity: sessions, quiz scores and how often you used the
+  AI tools. <strong>It does not prove that you have mastered any topic.</strong> Quiz scores come from
+  AI-written quizzes, and tutor notes are one tutor's view of one session.</div>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+<h2>Tutoring sessions</h2>
+{% for s in sessions %}
+<article class="card">
+  <h3 class="card-title">{{ s.subject_name }} with {{ s.tutor_name }}</h3>
+  <p class="meta">{{ s.start_at|local_range(s.end_at) }}</p>
+  {% if s.topics_covered %}
+    <p><strong>Topics covered:</strong> {{ s.topics_covered }}</p>
+    <p class="preline"><strong>Learning outcomes:</strong> {{ s.outcomes }}</p>
+    {% if s.next_steps %}<p class="preline"><strong>Next steps:</strong> {{ s.next_steps }}</p>{% endif %}
+    {% if s.summary_text %}
+      <p class="preline"><strong>Recap:</strong> {{ s.summary_text }}</p>
+      {% if s.summary_ai_assisted %}<p class="hint">This recap was written with AI assistance and reviewed by your tutor. It may contain mistakes.</p>{% endif %}
+    {% endif %}
+  {% else %}
+    <p class="empty">Your tutor has not added notes for this session.</p>
+  {% endif %}
+  {% if s.rating %}<p class="hint">Your feedback: {{ s.rating }} / 5</p>
+  {% else %}<a class="btn btn-small" href="{{ url_for('progress.feedback', request_id=s.id) }}">Leave feedback</a>{% endif %}
+</article>
+{% else %}
+  <p class="empty">No completed sessions yet.</p>
+{% endfor %}
+
+<h2>Quizzes</h2>
+{% if quizzes %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Topic</th><th>Subject</th><th>Level</th><th>Attempts</th><th>Latest score</th></tr></thead>
+    <tbody>
+    {% for z in quizzes %}
+      <tr>
+        <td><a href="{{ url_for('quizzes.history', quiz_id=z.id) if z.attempts else url_for('quizzes.take', quiz_id=z.id) }}">{{ z.topic }}</a></td>
+        <td>{{ z.subject_name or '—' }}</td>
+        <td>{{ z.difficulty|capitalize }}</td>
+        <td>{{ z.attempts }}</td>
+        <td>{% if z.attempts %}{{ z.last_score }} / {{ z.question_count }}{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}<p class="empty">No quizzes yet.</p>{% endif %}
+
+<h2>AI tool activity</h2>
+{% set labels = {'chat': 'Questions asked in the AI assistant', 'summary': 'Note summaries',
+                 'quiz': 'Quizzes generated', 'agent': 'Coordinator messages'} %}
+{% if counts %}
+  <ul>{% for key, label in labels.items() if counts.get(key) %}<li>{{ label }}: {{ counts[key] }}</li>{% endfor %}</ul>
+  <p class="hint">These are counts only. The content of your chats is not stored.</p>
+{% else %}<p class="empty">No AI activity yet.</p>{% endif %}
+{% endblock %}

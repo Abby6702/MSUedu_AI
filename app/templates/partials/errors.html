@@ -1,0 +1,5 @@
+{% if errors %}
+<div class="flash flash-error" role="alert">
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}

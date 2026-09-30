@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Registration closed – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Registration is closed</h1>
+  <p>New accounts cannot be created right now. If you already have an account, you can log in.</p>
+  <p><a class="btn" href="{{ url_for('auth.login') }}">Log in</a></p>
+</section>
+{% endblock %}

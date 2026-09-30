@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Tutor dashboard – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Welcome, {{ g.user.full_name }}!</h1>
+
+<p>Profile approval:
+  <span class="badge badge-{{ profile.get('approval_status', 'pending') }}">
+    {{ profile.get('approval_status', 'pending')|capitalize }}</span></p>
+
+{% if profile.get('approval_status', 'pending') == 'pending' %}
+  <div class="flash flash-info">An administrator must approve your profile before students can see you.
+    Complete your <a href="{{ url_for('account.profile') }}">profile</a>,
+    <a href="{{ url_for('tutor.subjects') }}">subjects</a> and
+    <a href="{{ url_for('tutor.availability') }}">availability</a> so it can be reviewed.</div>
+{% elif profile.get('approval_status') == 'rejected' %}
+  <div class="flash flash-error">Your profile was not approved. Update your details and contact an administrator.</div>
+{% endif %}
+
+<div class="grid">
+  <article class="card"><h2>Incoming requests</h2>
+    {% if incoming %}
+      <ul>{% for r in incoming %}<li>{{ r.subject_name }} from {{ r.student_name }}<br>
+        <span class="meta">{{ r.start_at|local_dt }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="empty">No new requests.</p>{% endif %}
+    <a href="{{ url_for('bookings.tutor_requests') }}">Manage requests</a></article>
+  <article class="card"><h2>Upcoming sessions</h2>
+    {% if upcoming %}
+      <ul>{% for r in upcoming %}<li>{{ r.subject_name }} with {{ r.student_name }}<br>
+        <span class="meta">{{ r.start_at|local_dt }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="empty">No confirmed sessions.</p>{% endif %}
+    <a href="{{ url_for('bookings.tutor_requests') }}">See all</a></article>
+  <article class="card"><h2>Subjects</h2>
+    <p>{{ summary.subjects }} selected</p>
+    <a class="btn btn-outline" href="{{ url_for('tutor.subjects') }}">Manage subjects</a></article>
+  <article class="card"><h2>Availability</h2>
+    <p>{{ summary.slots }} weekly slot{{ '' if summary.slots == 1 else 's' }}</p>
+    <a class="btn btn-outline" href="{{ url_for('tutor.availability') }}">Manage availability</a></article>
+</div>
+{% endblock %}

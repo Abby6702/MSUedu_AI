@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Quizzes – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>AI quizzes and practice</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a></p>
+<p class="hint">Questions are written by AI and can contain mistakes. Check important
+  answers with your textbook, instructor or a tutor. A quiz score is only feedback on one
+  quiz. It does not prove that you have mastered a topic.</p>
+
+{% include "partials/errors.html" %}
+
+<section class="auth-card wide">
+  <h2>Make a new quiz</h2>
+  <form method="post" action="{{ url_for('quizzes.generate') }}" data-busy="Generating… please wait">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="subject_id">Subject</label>
+    <select id="subject_id" name="subject_id" required>
+      <option value="">Select…</option>
+      {% for s in subjects %}
+        <option value="{{ s.id }}" {% if data.subject_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="topic">Topic</label>
+    <input id="topic" name="topic" type="text" required minlength="2" maxlength="100"
+           placeholder="e.g. limits and continuity" value="{{ data.topic }}">
+
+    <label for="difficulty">Difficulty</label>
+    <select id="difficulty" name="difficulty">
+      {% for d in ['easy', 'medium', 'hard'] %}
+        <option value="{{ d }}" {% if data.difficulty == d %}selected{% endif %}>{{ d|capitalize }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="count">Number of questions ({{ limits[0] }} to {{ limits[1] }})</label>
+    <input id="count" name="count" type="number" required min="{{ limits[0] }}" max="{{ limits[1] }}"
+           value="{{ data.count }}">
+
+    <fieldset>
+      <legend>Question types</legend>
+      <label class="choice"><input type="checkbox" name="types" value="mcq"
+        {% if 'mcq' in data.types %}checked{% endif %}> Multiple choice</label>
+      <label class="choice"><input type="checkbox" name="types" value="tf"
+        {% if 'tf' in data.types %}checked{% endif %}> True or false</label>
+      <label class="choice"><input type="checkbox" name="types" value="short"
+        {% if 'short' in data.types %}checked{% endif %}> Short answer</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mode</legend>
+      <label class="choice"><input type="radio" name="mode" value="practice"
+        {% if data.mode == 'practice' %}checked{% endif %}>
+        Practice: see correct answers and explanations right after you submit</label>
+      <label class="choice"><input type="radio" name="mode" value="test"
+        {% if data.mode == 'test' %}checked{% endif %}>
+        Test: see only your score first. Reveal the answers when you choose</label>
+    </fieldset>
+
+    <button class="btn" type="submit">Generate quiz</button>
+    <p class="hint busy-note" hidden>The AI is writing your quiz. This can take a minute or two.</p>
+  </form>
+</section>
+
+<h2>My quizzes</h2>
+{% if quizzes %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Topic</th><th>Subject</th><th>Level</th><th>Mode</th><th>Attempts</th>
+      <th>Last score</th><th><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+    {% for z in quizzes %}
+      <tr>
+        <td>{{ z.topic }}<br><span class="meta">{{ z.created_at|local_dt }}</span></td>
+        <td>{{ z.subject_name or '—' }}</td>
+        <td>{{ z.difficulty|capitalize }}</td>
+        <td>{{ z.mode|capitalize }}</td>
+        <td>{{ z.attempts }}</td>
+        <td>{% if z.attempts %}{{ z.last_score }} / {{ z.question_count }}{% else %}—{% endif %}</td>
+        <td class="review-actions">
+          <a class="btn btn-small" href="{{ url_for('quizzes.take', quiz_id=z.id) }}">
+            {{ 'Practice again' if z.attempts else 'Start' }}</a>
+          {% if z.attempts %}
+            <a class="btn btn-small btn-outline" href="{{ url_for('quizzes.history', quiz_id=z.id) }}">History</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="empty">You have not made any quizzes yet.</p>
+{% endif %}
+{% endblock %}

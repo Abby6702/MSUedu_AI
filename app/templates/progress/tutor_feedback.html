@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My feedback – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Feedback about my tutoring</h1>
+<p><a href="{{ url_for('tutor.dashboard') }}">← Back to dashboard</a></p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+{% if summary.n %}
+  <div class="card score-box">
+    <p class="stat-number">{{ summary.avg }} / 5</p>
+    <p>from {{ summary.n }} rating{{ '' if summary.n == 1 else 's' }}</p>
+  </div>
+{% endif %}
+
+{% for f in items %}
+<article class="card">
+  <p><strong>{{ f.rating }} / 5</strong> · {{ f.subject_name }}
+    <span class="meta">· {{ f.created_at|local_dt }}</span></p>
+  {% if f.comment %}<p class="preline">{{ f.comment }}</p>{% else %}<p class="empty">No written comment.</p>{% endif %}
+</article>
+{% else %}
+  {% if not error %}<p class="empty">No feedback yet. It appears after students rate completed sessions.</p>{% endif %}
+{% endfor %}
+<p class="hint">Feedback is anonymous. A few ratings do not tell the whole story, so use them as one input among many.</p>
+{% endblock %}

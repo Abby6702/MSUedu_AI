@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Accounts – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<h2>Accounts</h2>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+<form method="get" class="filter-form card">
+  <div><label for="q">Name or email</label>
+    <input id="q" name="q" type="text" maxlength="100" value="{{ filters.q }}"></div>
+  <div><label for="role">Role</label>
+    <select id="role" name="role">
+      <option value="">Any</option>
+      {% for r in ['student', 'tutor', 'admin'] %}
+        <option value="{{ r }}" {% if filters.role == r %}selected{% endif %}>{{ r|capitalize }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">Any</option>
+      <option value="active" {% if filters.status == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if filters.status == 'inactive' %}selected{% endif %}>Deactivated</option>
+    </select></div>
+  <div class="filter-actions">
+    <button class="btn" type="submit">Search</button>
+    <a class="btn btn-outline" href="{{ url_for('admin.user_list') }}">Clear</a>
+  </div>
+</form>
+
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Person</th><th>Role</th><th>Status</th><th>Joined (PH time)</th>
+      <th>Last login</th><th><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+    {% for u in rows %}
+      <tr>
+        <td>{{ u.full_name }}<br><span class="meta">{{ u.email }}</span></td>
+        <td>{{ u.role|capitalize }}
+          {% if u.role == 'tutor' and u.approval_status %}<br><span class="badge badge-{{ u.approval_status }}">{{ u.approval_status|capitalize }}</span>{% endif %}</td>
+        <td>{{ 'Active' if u.is_active else 'Deactivated' }}</td>
+        <td>{{ u.created_at|local_dt }}</td>
+        <td>{{ (u.last_login_at|local_dt) or 'Never' }}</td>
+        <td>
+          {% if u.role != 'admin' %}
+          <div class="review-actions">
+            {% if u.is_active %}
+              <a class="btn btn-small btn-danger" href="{{ url_for('admin.user_action', user_id=u.id, action='deactivate') }}">Deactivate</a>
+            {% else %}
+              <a class="btn btn-small" href="{{ url_for('admin.user_action', user_id=u.id, action='activate') }}">Reactivate</a>
+            {% endif %}
+            <a class="btn btn-small btn-outline" href="{{ url_for('admin.user_action', user_id=u.id, action='reset_password') }}">Reset password</a>
+          </div>
+          {% else %}<span class="hint">Not managed here</span>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif not error %}
+  <p class="empty">No accounts match.</p>
+{% endif %}
+{% include "partials/pager.html" %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Please confirm – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>{{ info.title }}</h1>
+  <p>{{ info.text }}</p>
+
+  <div class="card">
+    <p><strong>{{ req.subject_name }}:</strong> {{ req.topic }}</p>
+    <p class="meta">Student: {{ req.student_name }} · Tutor: {{ req.tutor_name }}</p>
+    {% if action == 'accept_proposal' %}
+      <p><strong>New time:</strong> {{ req.proposed_start_at|local_range(req.proposed_end_at) }}</p>
+    {% else %}
+      <p><strong>When:</strong> {{ req.start_at|local_range(req.end_at) }}</p>
+    {% endif %}
+  </div>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if action == 'decline' %}
+      <label for="note">Reason (optional)</label>
+      <textarea id="note" name="note" rows="3" maxlength="500"></textarea>
+    {% endif %}
+    <p class="review-actions">
+      <button class="btn {{ 'btn-danger' if info.danger else '' }}" type="submit">{{ info.button }}</button>
+      <a class="btn btn-outline" href="{{ back_url }}">No, go back</a>
+    </p>
+  </form>
+</section>
+{% endblock %}

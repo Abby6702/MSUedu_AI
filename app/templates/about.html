@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}About and privacy – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>About MSUEdu AI</h1>
+  <p>MSUEdu AI is a student project that demonstrates an AI-assisted peer tutoring platform.
+     <strong>It is not an official website of Mindanao State University and is not endorsed by it.</strong></p>
+
+  <h2>How the AI is used</h2>
+  <ul>
+    <li>The AI runs on the server's own computer (through Ollama). Your questions are not sent to an online AI service.</li>
+    <li>The AI assistant, quizzes and session recaps are <strong>generated text and can contain mistakes</strong>.
+        Check important information with your textbook, instructor or tutor.</li>
+    <li>The tutoring coordinator only <strong>prepares</strong> requests and cancellations. Nothing happens until you press Confirm,
+        and it can never accept a request on a tutor's behalf.</li>
+    <li>Quiz scores and AI activity counts are not proof that you have mastered a topic.</li>
+  </ul>
+
+  <h2>What is stored</h2>
+  <ul>
+    <li>Your account (name, email, a scrambled password hash), your profile, requests, sessions, quiz attempts, feedback and notifications.</li>
+    <li>AI chats and notes you paste are <strong>not saved</strong>. Only counts (which feature, success or failure) are kept.</li>
+    <li>Tutor student numbers are visible only to administrators. Feedback is shown without the student's name.</li>
+    <li>Important administrator actions are recorded in an audit log, without passwords.</li>
+  </ul>
+
+  <h2>Please note</h2>
+  <ul>
+    <li>Do not type passwords or private information into forms or AI tools.</li>
+    <li>Content marked "Sample" is fictional demonstration data.</li>
+    <li>This page is a plain-language summary, not a legal privacy policy. Before using real student data, the
+        project needs permission, a proper privacy review and appropriate safeguards.</li>
+  </ul>
+  <p><a class="btn" href="{{ url_for('main.home') }}">Back to home</a></p>
+</section>
+{% endblock %}

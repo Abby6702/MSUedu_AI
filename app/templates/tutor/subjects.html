@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}My subjects – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>My subjects and format</h1>
+  <p><a href="{{ url_for('tutor.dashboard') }}">← Back to dashboard</a></p>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="tutoring_format">How do you prefer to tutor?</label>
+    <select id="tutoring_format" name="tutoring_format" required>
+      <option value="both" {% if fmt == 'both' %}selected{% endif %}>Online or in person</option>
+      <option value="online" {% if fmt == 'online' %}selected{% endif %}>Online only</option>
+      <option value="in_person" {% if fmt == 'in_person' %}selected{% endif %}>In person only</option>
+    </select>
+
+    <fieldset>
+      <legend>Subjects I can teach</legend>
+      {% for s in all_subjects %}
+        <div class="subject-row">
+          <label class="choice">
+            <input type="checkbox" name="subject_ids" value="{{ s.id }}"
+                   {% if s.id in chosen %}checked{% endif %}>
+            {{ s.name }} <span class="hint">({{ s.category or 'General' }})</span>
+          </label>
+          <input type="text" name="topics_{{ s.id }}" maxlength="255"
+                 placeholder="Topics you can help with (optional)"
+                 aria-label="Topics for {{ s.name }}" value="{{ chosen.get(s.id, '') }}">
+        </div>
+      {% else %}
+        <p class="empty">No subjects exist yet. Ask an administrator to add some.</p>
+      {% endfor %}
+    </fieldset>
+
+    <button class="btn" type="submit">Save</button>
+  </form>
+</section>
+{% endblock %}

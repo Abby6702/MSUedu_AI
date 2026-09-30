@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Quiz – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('quizzes.index') }}">← Back to quizzes</a></p>
+<h1>{{ quiz.subject_name or 'Quiz' }}: {{ quiz.topic }}</h1>
+<p class="meta">{{ quiz.difficulty|capitalize }} · {{ questions|length }} questions ·
+  {% if quiz.mode == 'practice' %}Practice mode: answers and explanations appear after you submit.
+  {% else %}Test mode: you see your score first. Answers are shown only if you ask.{% endif %}</p>
+<p class="hint">Written by AI, so it may contain mistakes. Blank questions count as incorrect.</p>
+
+<form method="post" action="{{ url_for('quizzes.submit', quiz_id=quiz.id) }}" data-busy="Submitting…">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  {% for q in questions %}
+  <fieldset class="question">
+    <legend>{{ q.position }}. {{ q.question_text }}</legend>
+    {% if q.q_type == 'mcq' %}
+      {% for opt in q.options %}
+        <label class="choice"><input type="radio" name="q_{{ q.id }}" value="{{ loop.index0 }}"> {{ opt }}</label>
+      {% endfor %}
+    {% elif q.q_type == 'tf' %}
+      <label class="choice"><input type="radio" name="q_{{ q.id }}" value="true"> True</label>
+      <label class="choice"><input type="radio" name="q_{{ q.id }}" value="false"> False</label>
+    {% else %}
+      <label class="sr-only" for="q_{{ q.id }}">Your answer to question {{ q.position }}</label>
+      <input type="text" id="q_{{ q.id }}" name="q_{{ q.id }}" maxlength="200"
+             autocomplete="off" placeholder="Type a short answer">
+    {% endif %}
+  </fieldset>
+  {% endfor %}
+
+  <button class="btn" type="submit">Submit answers</button>
+</form>
+{% endblock %}

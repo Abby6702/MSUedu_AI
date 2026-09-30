@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Log in – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Log in</h1>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required autocomplete="email"
+           value="{{ email }}">
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required
+           autocomplete="current-password">
+
+    <button class="btn" type="submit">Log in</button>
+  </form>
+  <p>New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+</section>
+{% endblock %}

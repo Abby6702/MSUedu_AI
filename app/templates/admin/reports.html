@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Reports – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<h2>Reports</h2>
+<p class="hint">Totals only. No student names, chats or quiz content appear here.</p>
+
+{% if data %}
+<h3>Requests by status</h3>
+{% if data.by_status %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Status</th><th>Requests</th></tr></thead>
+  <tbody>{% for r in data.by_status %}<tr><td>{{ r.status|replace('_', ' ')|capitalize }}</td><td>{{ r.n }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">No requests yet.</p>{% endif %}
+
+<h3>Tutor profiles</h3>
+{% if data.tutors %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Review status</th><th>Tutors</th></tr></thead>
+  <tbody>{% for r in data.tutors %}<tr><td>{{ r.approval_status|capitalize }}</td><td>{{ r.n }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">No tutors yet.</p>{% endif %}
+
+<h3>Completed sessions by subject (top 10)</h3>
+{% if data.per_subject %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Subject</th><th>Completed sessions</th></tr></thead>
+  <tbody>{% for r in data.per_subject %}<tr><td>{{ r.name }}</td><td>{{ r.n }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">No completed sessions yet.</p>{% endif %}
+
+<h3>Feedback</h3>
+{% if data.ratings.n %}
+  <p>Average rating: <strong>{{ data.ratings.avg }} / 5</strong> from {{ data.ratings.n }} visible rating{{ '' if data.ratings.n == 1 else 's' }}.</p>
+  <p class="hint">A small number of ratings says little. Use it together with the comments.</p>
+{% else %}<p class="empty">No feedback yet.</p>{% endif %}
+
+<h3>AI feature use (last {{ data.days }} days)</h3>
+{% if data.ai %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Feature</th><th>Requests</th><th>Succeeded</th><th>Success rate</th></tr></thead>
+  <tbody>{% for r in data.ai %}<tr><td>{{ r.feature }}</td><td>{{ r.total }}</td><td>{{ r.ok }}</td>
+    <td>{{ (r.rate ~ '%') if r.rate is not none else '—' }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">No AI use in this period.</p>{% endif %}
+
+<h3>Coordinator proposals</h3>
+{% if data.proposals %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Status</th><th>Proposals</th></tr></thead>
+  <tbody>{% for r in data.proposals %}<tr><td>{{ r.status|capitalize }}</td><td>{{ r.n }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="hint">"Prepared" ones were never confirmed, so nothing happened for them.</p>
+{% else %}<p class="empty">No proposals yet.</p>{% endif %}
+{% else %}
+  <div class="flash flash-error" role="alert">Could not build the reports. Please try again.</div>
+{% endif %}
+{% endblock %}

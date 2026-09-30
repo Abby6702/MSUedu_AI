@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Guided matching – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Guided tutor matching</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a> ·
+   <a href="{{ url_for('student.find_tutors') }}">Open full search</a></p>
+<p>Tell us what you need. Each reason below comes only from what the tutor has saved on their profile.</p>
+
+{% include "partials/errors.html" %}
+<form method="get" class="filter-form card">
+  <div><label for="subject_id">Subject (required)</label>
+    <select id="subject_id" name="subject_id" required>
+      <option value="">Select…</option>
+      {% for s in subjects %}
+        <option value="{{ s.id }}" {% if sel.subject_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="day">Preferred day</label>
+    <select id="day" name="day">
+      <option value="">No preference</option>
+      {% for name in day_names %}
+        <option value="{{ loop.index0 }}" {% if sel.day == loop.index0 %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="time">Preferred time</label>
+    <input id="time" name="time" type="time" value="{{ sel.time }}"></div>
+  <div><label for="format">Format</label>
+    <select id="format" name="format">
+      <option value="">No preference</option>
+      <option value="online" {% if sel.format == 'online' %}selected{% endif %}>Online</option>
+      <option value="in_person" {% if sel.format == 'in_person' %}selected{% endif %}>In person</option>
+    </select></div>
+  <div class="filter-actions"><button class="btn" type="submit">Find matches</button></div>
+</form>
+
+{% if searched and not errors %}
+  {% if results %}
+    <h2>{{ results|length }} possible match{{ '' if results|length == 1 else 'es' }}</h2>
+    <div class="grid">
+      {% for r in results %}
+      <article class="card">
+        <h3 class="card-title">{{ r.tutor.full_name }}</h3>
+        <p class="meta">{{ r.tutor.course or 'Course not set' }}{% if r.tutor.year_level %} · Year {{ r.tutor.year_level }}{% endif %}</p>
+        <p><strong>Why this tutor:</strong></p>
+        <ul>{% for reason in r.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
+        {% if r.notes %}
+          <p><strong>Keep in mind:</strong></p>
+          <ul class="notes">{% for n in r.notes %}<li>{{ n }}</li>{% endfor %}</ul>
+        {% endif %}
+        <a class="btn btn-outline" href="{{ url_for('student.tutor_detail', tutor_id=r.tutor.id) }}">View profile</a>
+      </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="empty">No approved tutors match those needs right now. Try removing the format preference or choose another subject.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

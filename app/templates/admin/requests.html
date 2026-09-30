@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Requests – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<h2>Tutoring requests and sessions</h2>
+<p class="hint">Read-only. Administrators cannot accept, decline or change requests. Student descriptions are not shown.</p>
+
+<nav class="tabs" aria-label="Filter by status">
+  <a href="{{ url_for('admin.request_list') }}" class="{{ 'active' if not status else '' }}">All</a>
+  {% for s in statuses %}
+    <a href="{{ url_for('admin.request_list', status=s) }}" class="{{ 'active' if s == status else '' }}">{{ s|replace('_', ' ')|capitalize }}</a>
+  {% endfor %}
+</nav>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Subject and topic</th><th>Student</th><th>Tutor</th><th>When (PH time)</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.id }}</td>
+        <td>{{ r.subject_name }}<br><span class="meta">{{ r.topic }} · {{ 'Online' if r.session_format == 'online' else 'In person' }}</span></td>
+        <td>{{ r.student_name }}</td>
+        <td>{{ r.tutor_name }}</td>
+        <td>{{ r.start_at|local_range(r.end_at) }}</td>
+        <td><span class="badge badge-{{ r.status }}">{{ r.status|replace('_', ' ')|capitalize }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif not error %}<p class="empty">No requests.</p>{% endif %}
+{% include "partials/pager.html" %}
+{% endblock %}

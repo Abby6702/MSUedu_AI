@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Find tutors – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Find a tutor</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a> ·
+   <a href="{{ url_for('student.match') }}">Try guided matching instead</a></p>
+
+<form method="get" class="filter-form card">
+  <div><label for="q">Name, subject or topic</label>
+    <input id="q" name="q" type="text" maxlength="100" value="{{ filters.q }}"></div>
+  <div><label for="subject_id">Subject</label>
+    <select id="subject_id" name="subject_id">
+      <option value="">Any subject</option>
+      {% for s in subjects %}
+        <option value="{{ s.id }}" {% if filters.subject_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="course">Course</label>
+    <input id="course" name="course" type="text" maxlength="100" value="{{ filters.course }}"></div>
+  <div><label for="day">Available on</label>
+    <select id="day" name="day">
+      <option value="">Any day</option>
+      {% for name in day_names %}
+        <option value="{{ loop.index0 }}" {% if filters.day == loop.index0 %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select></div>
+  <div><label for="format">Format</label>
+    <select id="format" name="format">
+      <option value="">Any</option>
+      <option value="online" {% if filters.format == 'online' %}selected{% endif %}>Online</option>
+      <option value="in_person" {% if filters.format == 'in_person' %}selected{% endif %}>In person</option>
+    </select></div>
+  <div><label for="sort">Sort by</label>
+    <select id="sort" name="sort">
+      <option value="name" {% if filters.sort == 'name' %}selected{% endif %}>Name (A–Z)</option>
+      <option value="slots" {% if filters.sort == 'slots' %}selected{% endif %}>Most availability</option>
+      <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest tutors</option>
+    </select></div>
+  <div class="filter-actions">
+    <button class="btn" type="submit">Search</button>
+    <a class="btn btn-outline" href="{{ url_for('student.find_tutors') }}">Clear</a>
+  </div>
+</form>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+{% if results %}
+  <p class="hint">{{ results|length }} tutor{{ '' if results|length == 1 else 's' }} found.
+     Ratings will appear after feedback is added (Phase 8).</p>
+  <div class="grid">
+    {% for t in results %}
+    <article class="card">
+      <h2 class="card-title">{{ t.full_name }}</h2>
+      <p class="meta">{{ t.course or 'Course not set' }}{% if t.year_level %} · Year {{ t.year_level }}{% endif %}</p>
+      <p><strong>Subjects:</strong> {{ t.subject_names or 'None listed yet' }}</p>
+      <p class="meta">{{ t.slot_count }} weekly slot{{ '' if t.slot_count == 1 else 's' }} ·
+        {{ {'online': 'Online', 'in_person': 'In person', 'both': 'Online or in person'}[t.tutoring_format] }}</p>
+      <a class="btn btn-outline" href="{{ url_for('student.tutor_detail', tutor_id=t.id) }}">View profile</a>
+    </article>
+    {% endfor %}
+  </div>
+{% elif not error %}
+  <p class="empty">No approved tutors match your search yet. Try fewer filters.
+     Tutors appear here only after an administrator approves them.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Register – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card">
+  <h1>Create your account</h1>
+  {% include "partials/errors.html" %}
+  <form method="post" data-check-match>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="full_name">Full name</label>
+    <input id="full_name" name="full_name" type="text" required minlength="2"
+           maxlength="100" autocomplete="name" value="{{ data.get('full_name', '') }}">
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required maxlength="255"
+           autocomplete="email" value="{{ data.get('email', '') }}">
+
+    <fieldset>
+      <legend>I want to join as</legend>
+      <label class="choice"><input type="radio" name="role" value="student"
+        {% if data.get('role', 'student') == 'student' %}checked{% endif %}> Student (find tutors and learn)</label>
+      <label class="choice"><input type="radio" name="role" value="tutor"
+        {% if data.get('role') == 'tutor' %}checked{% endif %}> Peer tutor (help other students)</label>
+    </fieldset>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required minlength="8"
+           maxlength="128" autocomplete="new-password">
+    <p class="hint">At least 8 characters, with at least one letter and one number.</p>
+
+    <label for="confirm_password">Confirm password</label>
+    <input id="confirm_password" name="confirm_password" type="password" required
+           autocomplete="new-password">
+
+    <p class="hint">This is a student project. Please read <a href="{{ url_for('main.about') }}">how your data is used</a>.</p>
+    <button class="btn" type="submit">Register</button>
+  </form>
+  <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</section>
+{% endblock %}

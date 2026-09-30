@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Request a session – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('student.tutor_detail', tutor_id=tutor.id) }}">← Back to {{ tutor.full_name }}'s profile</a></p>
+<section class="auth-card wide">
+  {% if review %}
+    <h1>Review your request</h1>
+    <p>Nothing is sent until you press <strong>Confirm</strong>.</p>
+    <div class="card">
+      <p><strong>Tutor:</strong> {{ tutor.full_name }}</p>
+      <p><strong>Subject:</strong> {{ subject_name }}</p>
+      <p><strong>Topic:</strong> {{ data.topic }}</p>
+      <p><strong>When:</strong> {{ data.start|local_range(data.end) }}</p>
+      <p><strong>Format:</strong> {{ 'Online' if data.format == 'online' else 'In person' }}</p>
+      {% if data.description %}<p class="preline"><strong>Details:</strong> {{ data.description }}</p>{% endif %}
+    </div>
+    {% macro hidden_fields() %}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="subject_id" value="{{ data.subject_id }}">
+      <input type="hidden" name="topic" value="{{ data.topic }}">
+      <input type="hidden" name="description" value="{{ data.description }}">
+      <input type="hidden" name="format" value="{{ data.format }}">
+      <input type="hidden" name="date" value="{{ data.date }}">
+      <input type="hidden" name="time" value="{{ data.time }}">
+      <input type="hidden" name="duration" value="{{ data.duration }}">
+    {% endmacro %}
+    <div class="review-actions">
+      <form method="post">{{ hidden_fields() }}
+        <input type="hidden" name="step" value="confirm">
+        <button class="btn" type="submit">Confirm and send request</button></form>
+      <form method="post">{{ hidden_fields() }}
+        <input type="hidden" name="step" value="edit">
+        <button class="btn btn-outline" type="submit">Change details</button></form>
+    </div>
+
+  {% else %}
+    <h1>Request a session with {{ tutor.full_name }}</h1>
+    <p class="hint">Times are Philippine time. The tutor's weekly availability:
+      {% for a in tutor.availability %}{{ a.day_name }} {{ a.label }}{{ '; ' if not loop.last }}{% else %}none listed{% endfor %}.</p>
+    {% include "partials/errors.html" %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="step" value="review">
+
+      <label for="subject_id">Subject</label>
+      <select id="subject_id" name="subject_id" required>
+        <option value="">Select…</option>
+        {% for o in options %}
+          <option value="{{ o.id }}" {% if data.get('subject_id')|string == o.id|string %}selected{% endif %}>{{ o.name }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="topic">Topic</label>
+      <input id="topic" name="topic" type="text" required minlength="2" maxlength="150"
+             value="{{ data.get('topic') or '' }}">
+
+      <label for="date">Preferred date</label>
+      <input id="date" name="date" type="date" required min="{{ min_date }}" max="{{ max_date }}"
+             value="{{ data.get('date') or '' }}">
+
+      <label for="time">Start time</label>
+      <input id="time" name="time" type="time" required value="{{ data.get('time') or '' }}">
+
+      <label for="duration">Length</label>
+      <select id="duration" name="duration" required>
+        {% for d in durations %}
+          <option value="{{ d }}" {% if data.get('duration')|string == d|string or (not data.get('duration') and d == 60) %}selected{% endif %}>{{ d }} minutes</option>
+        {% endfor %}
+      </select>
+
+      <label for="format">Format</label>
+      <select id="format" name="format" required>
+        {% if tutor.tutoring_format in ('online', 'both') %}
+          <option value="online" {% if data.get('format') == 'online' %}selected{% endif %}>Online</option>{% endif %}
+        {% if tutor.tutoring_format in ('in_person', 'both') %}
+          <option value="in_person" {% if data.get('format') == 'in_person' %}selected{% endif %}>In person</option>{% endif %}
+      </select>
+
+      <label for="description">What do you need help with? (optional)</label>
+      <textarea id="description" name="description" rows="4" maxlength="1000">{{ data.get('description') or '' }}</textarea>
+      <p class="hint">Please do not include passwords or private information.</p>
+
+      <button class="btn" type="submit">Review request</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

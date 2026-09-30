@@ -1,0 +1,188 @@
+/* Buttons */
+.btn {
+  display: inline-block; background: var(--primary); color: #fff; border: 2px solid var(--primary);
+  border-radius: 8px; padding: .55rem 1.1rem; font-size: 1rem; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+}
+.btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+.btn-outline { background: transparent; color: var(--primary); }
+.btn-outline:hover { color: #fff; }
+.btn-disabled { background: #e9edeb; border-color: #e9edeb; color: var(--muted); cursor: not-allowed; }
+.btn-disabled:hover { background: #e9edeb; border-color: #e9edeb; }
+.hero-actions, .quick-links { display: flex; flex-wrap: wrap; gap: .6rem; }
+
+/* Link-styled button (used for "Log out") */
+.nav-form { margin: 0; }
+.linklike {
+  background: none; border: none; padding: 0; color: #fff; font: inherit;
+  cursor: pointer; text-decoration: none;
+}
+.linklike:hover { text-decoration: underline; }
+
+/* Forms */
+.auth-card {
+  max-width: 460px; margin: 2rem auto; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem;
+}
+.auth-card.wide { max-width: 640px; }
+.auth-card h1 { margin-top: 0; font-size: 1.6rem; }
+form label { display: block; margin-top: 1rem; font-weight: 600; }
+form input[type="text"], form input[type="email"], form input[type="password"],
+form select, form textarea {
+  width: 100%; margin-top: .3rem; padding: .6rem .7rem; font: inherit;
+  border: 1px solid #b9c3be; border-radius: 8px; background: #fff;
+}
+form input:focus, form select:focus, form textarea:focus, .btn:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 1px;
+}
+form button.btn { margin-top: 1.2rem; }
+fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0 0; padding: .5rem 1rem 1rem; }
+legend { font-weight: 600; padding: 0 .4rem; }
+.choice { font-weight: 400; margin-top: .6rem; }
+.choice input { margin-right: .4rem; }
+.hint { color: var(--muted); font-size: .9rem; margin: .3rem 0 0; }
+
+/* Messages */
+.flash { margin: 1rem 0; padding: .8rem 1rem; border-radius: 8px; border: 1px solid transparent; }
+.flash ul { margin: 0; padding-left: 1.2rem; }
+.flash-success { background: var(--ok-bg); color: var(--ok-ink); border-color: #b9e0cd; }
+.flash-error { background: var(--err-bg); color: var(--err-ink); border-color: #f2c4c4; }
+.flash-info { background: #e8f0fb; color: #1d3f72; border-color: #c3d6f2; }
+
+/* Dashboard bits */
+.empty { color: var(--muted); font-style: italic; }
+.stat { font-size: 1rem; }
+.stat-number { display: block; font-size: 2rem; font-weight: 700; color: var(--primary-dark); }
+.badge { display: inline-block; padding: .1rem .6rem; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+.badge-pending { background: #fff3d6; color: #7a5300; }
+.badge-approved { background: var(--ok-bg); color: var(--ok-ink); }
+.badge-rejected { background: var(--err-bg); color: var(--err-ink); }
+
+/* ---- Phase 3 additions ---- */
+.filter-form { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 1.2rem; }
+.filter-form label { margin-top: 0; }
+.filter-actions { display: flex; gap: .6rem; align-items: end; }
+.filter-actions .btn, .filter-form button.btn { margin-top: 0; }
+
+.inline-form { display: flex; flex-wrap: wrap; gap: .8rem; align-items: end; margin-bottom: 1rem; }
+.inline-form > div { flex: 1 1 150px; }
+.inline-form label { margin-top: 0; }
+.inline-form button.btn { margin-top: 0; }
+
+.card-title { margin: 0 0 .2rem; font-size: 1.15rem; color: var(--primary-dark); }
+.meta { color: var(--muted); font-size: .92rem; margin: .2rem 0 .6rem; }
+.preline { white-space: pre-line; }
+.notes li { color: #7a5300; }
+
+.subject-row { display: grid; gap: .3rem; margin-top: .8rem; }
+.subject-row input[type="text"] { margin-top: 0; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: var(--card); }
+th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--border); }
+th { background: #eef3f1; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.btn-small { padding: .3rem .8rem; font-size: .9rem; margin-top: 0 !important; }
+.btn-danger { background: #a12a2a; border-color: #a12a2a; }
+.btn-danger:hover { background: #7f1f1f; border-color: #7f1f1f; }
+
+.tabs { display: flex; gap: .5rem; margin: 1rem 0; flex-wrap: wrap; }
+.tabs a { padding: .4rem 1rem; border: 1px solid var(--border); border-radius: 999px;
+          text-decoration: none; color: var(--ink); background: var(--card); }
+.tabs a.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.review-card { margin-bottom: 1rem; }
+.review-actions { display: flex; gap: .6rem; margin-top: .6rem; }
+.review-actions form { margin: 0; }
+
+/* ---- Phase 4 additions ---- */
+.badge-accepted, .badge-completed { background: var(--ok-bg); color: var(--ok-ink); }
+.badge-declined, .badge-cancelled { background: var(--err-bg); color: var(--err-ink); }
+.badge-reschedule_proposed { background: #e8f0fb; color: #1d3f72; }
+.request-card { margin-bottom: 1rem; }
+.request-card .card-title { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.proposal { background: #e8f0fb; border-radius: 8px; padding: .5rem .8rem; }
+.review-actions { flex-wrap: wrap; align-items: center; }
+
+/* ---- Phase 5 additions ---- */
+.tab-buttons { display: flex; gap: .5rem; margin: 1rem 0; flex-wrap: wrap; }
+.tab-btn { padding: .4rem 1rem; border: 1px solid var(--border); border-radius: 999px;
+           background: var(--card); color: var(--ink); font: inherit; cursor: pointer; }
+.tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.chat-log { min-height: 200px; max-height: 420px; overflow-y: auto; padding: .8rem;
+            border: 1px solid var(--border); border-radius: 8px; background: #fbfcfb;
+            margin-bottom: 1rem; }
+.msg { white-space: pre-wrap; overflow-wrap: anywhere; padding: .6rem .9rem;
+       border-radius: 10px; margin: .5rem 0; max-width: 90%; }
+.msg-user { background: #e3f4ec; margin-left: auto; }
+.msg-ai { background: #fff; border: 1px solid var(--border); }
+.msg-error { background: var(--err-bg); color: var(--err-ink); }
+
+/* ---- Phase 6 additions ---- */
+.question { margin-top: 1rem; background: var(--card); }
+.question legend { font-weight: 600; }
+.score-box { text-align: center; max-width: 320px; }
+.score-box .stat-number { font-size: 2.4rem; margin: 0; }
+.review-item { margin-bottom: .8rem; border-left: 6px solid var(--border); }
+.review-item.ok { border-left-color: #2e8b63; }
+.review-item.bad { border-left-color: #b03a3a; }
+
+/* ---- Phase 7 additions ---- */
+.agent-steps { background: #f1f5f3; border: 1px dashed var(--border); border-radius: 8px;
+               padding: .4rem .8rem; margin: .5rem 0; font-size: .92rem; }
+.agent-steps summary { cursor: pointer; font-weight: 600; }
+.suggestion, .proposal-card { margin: .6rem 0; max-width: 95%; }
+.proposal-card { border: 2px solid var(--accent); }
+.slot-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.proposal-result { margin-top: .5rem; }
+
+/* ---- Phase 8 additions ---- */
+.nav-badge { display: inline-block; min-width: 1.4rem; padding: 0 .4rem; border-radius: 999px;
+             background: var(--accent); color: #000; font-size: .8rem; font-weight: 700;
+             text-align: center; }
+.notif { margin: .8rem 0; }
+.notif.unread { border-left: 6px solid var(--accent); background: #fffdf5; }
+.dot { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%;
+       background: var(--accent); margin-right: .4rem; }
+.feedback-quote { margin: .6rem 0; padding: .4rem 1rem; border-left: 4px solid var(--border);
+                  background: #fbfcfb; }
+.feedback-quote p { margin: .2rem 0; }
+
+/* ---- Phase 9 additions ---- */
+.announcement { background: #fff3d6; color: #5c4100; border-bottom: 1px solid #f0d08a;
+                padding: .5rem 0; font-weight: 600; }
+.temp-password { display: inline-block; font-size: 1.5rem; letter-spacing: .08em;
+                 padding: .5rem 1rem; background: #f1f5f3; border: 2px dashed var(--primary);
+                 border-radius: 8px; user-select: all; }
+.pager { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+
+
+/* ---- Phase 10 additions ---- */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.steps { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: 1rem;
+         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); counter-reset: step; }
+.steps li { counter-increment: step; background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem; }
+.steps li::before { content: counter(step); display: inline-block; width: 1.8rem; height: 1.8rem;
+                    line-height: 1.8rem; text-align: center; border-radius: 50%;
+                    background: var(--primary); color: #fff; font-weight: 700; margin-bottom: .4rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+@media (max-width: 640px) {
+  th, td { padding: .45rem .5rem; font-size: .92rem; }
+  .chat-log { max-height: 340px; }
+  .msg { max-width: 100%; }
+  .suggestion, .proposal-card { max-width: 100%; }
+}
+
+@media print {
+  .site-header, .site-footer, .skip-link, .announcement, .nav-toggle { display: none; }
+  body { background: #fff; }
+  .card { break-inside: avoid; }
+}

@@ -1,0 +1,30 @@
+{% macro request_card(r, viewer) %}
+{% set labels = {'accept': 'Accept', 'decline': 'Decline', 'propose': 'Propose another time',
+                 'cancel': 'Cancel', 'complete': 'Mark completed',
+                 'accept_proposal': 'Accept new time'} %}
+<article class="card request-card">
+  <h3 class="card-title">{{ r.subject_name }}: {{ r.topic }}
+    <span class="badge badge-{{ r.status }}">{{ r.status|replace('_', ' ')|capitalize }}</span></h3>
+  <p class="meta">
+    {% if viewer == 'student' %}Tutor: {{ r.tutor_name }}{% else %}Student: {{ r.student_name }}{% endif %}
+    · {{ 'Online' if r.session_format == 'online' else 'In person' }}</p>
+  <p><strong>When:</strong> {{ r.start_at|local_range(r.end_at) }}</p>
+  {% if r.status == 'reschedule_proposed' %}
+    <p class="proposal"><strong>Proposed new time:</strong> {{ r.proposed_start_at|local_range(r.proposed_end_at) }}</p>
+  {% endif %}
+  {% if r.description %}<p class="preline"><strong>Details:</strong> {{ r.description }}</p>{% endif %}
+  {% if r.response_note %}<p class="preline"><strong>Note:</strong> {{ r.response_note }}</p>{% endif %}
+  {% if r.actions %}
+  <div class="review-actions">
+    {% for a in r.actions %}
+      {% if a == 'propose' %}
+        <a class="btn btn-small btn-outline" href="{{ url_for('bookings.propose', request_id=r.id) }}">{{ labels[a] }}</a>
+      {% else %}
+        <a class="btn btn-small {{ 'btn-danger' if a in ('decline', 'cancel') else '' }}"
+           href="{{ url_for('bookings.act', request_id=r.id, action=a) }}">{{ labels[a] }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</article>
+{% endmacro %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Feedback moderation – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<h2>Feedback moderation</h2>
+<p class="hint">Hide feedback that is abusive, contains private information, or is clearly not about the session.
+  Hidden feedback disappears from tutor pages and averages. It is not deleted and can be shown again.
+  Students' names are not shown here.</p>
+
+<nav class="tabs" aria-label="Filter feedback">
+  {% for value, label in [('', 'All'), ('visible', 'Visible'), ('hidden', 'Hidden')] %}
+    <a href="{{ url_for('admin.feedback_list', show=value) if value else url_for('admin.feedback_list') }}"
+       class="{{ 'active' if show == value else '' }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% for f in rows %}
+<article class="card">
+  <p><strong>{{ f.rating }} / 5</strong> · about {{ f.tutor_name }} · {{ f.subject_name }}
+    <span class="meta">· {{ f.created_at|local_dt }}</span>
+    {% if f.is_hidden %}<span class="badge badge-declined">Hidden</span>{% endif %}</p>
+  {% if f.comment %}<p class="preline">{{ f.comment }}</p>{% else %}<p class="empty">No written comment.</p>{% endif %}
+  <form method="post" action="{{ url_for('admin.feedback_action', feedback_id=f.id, action='unhide' if f.is_hidden else 'hide') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-small {{ 'btn-outline' if f.is_hidden else 'btn-danger' }}" type="submit">
+      {{ 'Show again' if f.is_hidden else 'Hide' }}</button>
+  </form>
+</article>
+{% else %}
+  {% if not error %}<p class="empty">No feedback.</p>{% endif %}
+{% endfor %}
+{% include "partials/pager.html" %}
+{% endblock %}

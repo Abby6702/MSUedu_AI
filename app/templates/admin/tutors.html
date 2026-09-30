@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Review tutors – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Tutor profile review</h1>
+<p><a href="{{ url_for('admin.dashboard') }}">← Back to dashboard</a></p>
+
+<nav class="tabs" aria-label="Filter by status">
+  {% for s in ['pending', 'approved', 'rejected'] %}
+    <a href="{{ url_for('admin.review_tutors', status=s) }}"
+       class="{{ 'active' if s == status else '' }}">{{ s|capitalize }}</a>
+  {% endfor %}
+</nav>
+
+{% for t in tutor_list %}
+<article class="card review-card">
+  <h2 class="card-title">{{ t.full_name }}
+    <span class="badge badge-{{ t.approval_status }}">{{ t.approval_status|capitalize }}</span></h2>
+  <p class="meta">{{ t.email }} · Student no.: {{ t.student_number or 'not given' }}</p>
+  <p><strong>Course:</strong> {{ t.course or 'not set' }} · <strong>Year:</strong> {{ t.year_level or 'not set' }}
+     · <strong>Format:</strong> {{ format_labels[t.tutoring_format] }}</p>
+  <p><strong>Subjects:</strong> {{ t.subject_names or 'none selected' }}</p>
+  <p class="preline"><strong>Bio:</strong> {{ t.bio or 'none' }}</p>
+  <div class="review-actions">
+    {% for decision, label, cls in [('approved', 'Approve', ''), ('rejected', 'Reject', 'btn-danger')] %}
+      {% if t.approval_status != decision %}
+      <form method="post" action="{{ url_for('admin.review_action', tutor_id=t.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="decision" value="{{ decision }}">
+        <button class="btn btn-small {{ cls }}" type="submit">{{ label }}</button>
+      </form>
+      {% endif %}
+    {% endfor %}
+  </div>
+</article>
+{% else %}
+  <p class="empty">No {{ status }} tutor profiles.</p>
+{% endfor %}
+{% endblock %}

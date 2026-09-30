@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Audit log – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<h2>Audit log</h2>
+<p class="hint">Important actions, newest first. Passwords and private messages are never recorded here.</p>
+
+<form method="get" class="filter-form card">
+  <div><label for="action">Action</label>
+    <select id="action" name="action">
+      <option value="">All actions</option>
+      {% for a in actions %}<option value="{{ a }}" {% if action == a %}selected{% endif %}>{{ a }}</option>{% endfor %}
+    </select></div>
+  <div class="filter-actions">
+    <button class="btn" type="submit">Filter</button>
+    <a class="btn btn-outline" href="{{ url_for('admin.audit_list') }}">Clear</a>
+  </div>
+</form>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When (PH time)</th><th>Who</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+    <tbody>
+    {% for a in rows %}
+      <tr>
+        <td>{{ a.created_at|local_dt }}</td>
+        <td>{{ a.actor_name or 'System' }}</td>
+        <td>{{ a.action }}</td>
+        <td>{% if a.target_type %}{{ a.target_type }} #{{ a.target_id }}{% else %}—{% endif %}</td>
+        <td>{{ a.details or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif not error %}<p class="empty">No entries.</p>{% endif %}
+{% include "partials/pager.html" %}
+{% endblock %}

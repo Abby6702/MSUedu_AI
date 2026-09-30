@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Quiz history – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('quizzes.index') }}">← Back to quizzes</a></p>
+<h1>{{ quiz.subject_name or 'Quiz' }}: {{ quiz.topic }}</h1>
+<p class="meta">{{ quiz.difficulty|capitalize }} · {{ quiz.question_count }} questions · {{ quiz.mode|capitalize }} mode</p>
+<p><a class="btn" href="{{ url_for('quizzes.take', quiz_id=quiz.id) }}">Practice again</a></p>
+
+{% if attempts %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>When (PH time)</th><th>Score</th><th><span class="sr-only">Review</span></th></tr></thead>
+    <tbody>
+    {% for a in attempts %}
+      <tr>
+        <td>{{ a.submitted_at|local_dt }}</td>
+        <td>{{ a.score }} / {{ a.total }}</td>
+        <td><a class="btn btn-small btn-outline" href="{{ url_for('quizzes.result', attempt_id=a.id) }}">Review</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <p class="empty">No attempts yet.</p>
+{% endif %}
+{% endblock %}

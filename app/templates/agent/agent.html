@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Tutoring coordinator – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>AI tutoring coordinator</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a> ·
+   <a href="{{ url_for('bookings.my_requests') }}">My requests and sessions</a></p>
+
+<div id="agent"
+     data-csrf="{{ csrf_token() }}"
+     data-message-url="{{ url_for('agent.message') }}"
+     data-prepare-url="{{ url_for('agent.prepare') }}"
+     data-confirm-url="{{ url_for('agent.confirm', proposal_id=0) }}"
+     data-discard-url="{{ url_for('agent.discard', proposal_id=0) }}"
+     data-status-url="{{ url_for('assistant.status') }}">
+
+  <div id="aiBanner" class="flash flash-error" role="alert" hidden></div>
+
+  <p class="hint">Tell me what you need in your own words. I search real tutor availability and
+    <strong>prepare</strong> requests, but <strong>nothing is sent, cancelled or changed until you
+    press Confirm</strong>. I cannot accept requests for tutors. The AI only helps me understand your
+    message. Tutors, times and statuses come straight from the database. Messages are not saved.
+    Please do not type passwords or private information.</p>
+
+  <section class="card">
+    <p><strong>Try:</strong></p>
+    <p class="quick-links">
+      <button type="button" class="btn btn-small btn-outline example">I need help with Calculus 1 on Monday afternoon</button>
+      <button type="button" class="btn btn-small btn-outline example">What is the status of my requests?</button>
+      <button type="button" class="btn btn-small btn-outline example">Find me an online Statistics tutor tomorrow morning</button>
+    </p>
+
+    <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation">
+      <p class="empty" id="chatEmpty">Ask for a tutor, a status update, or a cancellation to begin.</p>
+    </div>
+
+    <label for="chatInput">Your message</label>
+    <textarea id="chatInput" rows="2" maxlength="{{ max_message }}"
+              placeholder="e.g. I need a Statistics tutor on Friday morning"></textarea>
+    <p class="review-actions">
+      <button type="button" class="btn" id="chatSend">Send</button>
+      <button type="button" class="btn btn-outline" id="chatClear">Clear</button>
+    </p>
+    <p class="hint" id="chatBusy" hidden>Working… planning, then checking real availability.</p>
+  </section>
+</div>
+
+<script src="{{ url_for('static', filename='js/agent.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Student dashboard – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Welcome, {{ g.user.full_name }}!</h1>
+
+{% if not profile.get('course') %}
+  <div class="flash flash-info">Your profile is incomplete.
+    <a href="{{ url_for('account.profile') }}">Add your course and year level</a>.</div>
+{% endif %}
+
+<div class="grid">
+  <article class="card"><h2>Upcoming sessions</h2>
+    {% if upcoming %}
+      <ul>{% for r in upcoming %}<li>{{ r.subject_name }} with {{ r.tutor_name }}<br>
+        <span class="meta">{{ r.start_at|local_dt }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="empty">No upcoming sessions.</p>{% endif %}
+    <a href="{{ url_for('bookings.my_requests') }}">See all</a></article>
+  <article class="card"><h2>Pending requests</h2>
+    {% if pending %}
+      <ul>{% for r in pending %}<li>{{ r.subject_name }} with {{ r.tutor_name }}
+        <span class="badge badge-{{ r.status }}">{{ r.status|replace('_', ' ')|capitalize }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="empty">Nothing pending.</p>{% endif %}
+    <a href="{{ url_for('bookings.my_requests') }}">See all</a></article>
+  <article class="card"><h2>Recent learning activity</h2>
+    {% if activity %}
+      <ul>{% for a in activity %}<li>Quiz: {{ a.topic }}, {{ a.score }} / {{ a.total }}<br>
+        <span class="meta">{{ a.submitted_at|local_dt }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="empty">No quizzes yet.</p>{% endif %}
+    <a href="{{ url_for('quizzes.index') }}">Quizzes</a></article>
+  <article class="card"><h2>Suggested subjects</h2>
+    {% if suggested %}
+      <ul>{% for s in suggested %}
+        <li><a href="{{ url_for('student.find_tutors', subject_id=s.id) }}">{{ s.name }}</a></li>
+      {% endfor %}</ul>
+    {% else %}<p class="empty">No subjects yet.</p>{% endif %}
+  </article>
+</div>
+
+<h2>Quick links</h2>
+<p class="quick-links">
+  <a class="btn" href="{{ url_for('agent.page') }}">AI tutoring coordinator</a>
+  <a class="btn" href="{{ url_for('student.find_tutors') }}">Find tutors</a>
+  <a class="btn" href="{{ url_for('student.match') }}">Guided matching</a>
+  <a class="btn" href="{{ url_for('bookings.my_requests') }}">My requests and sessions</a>
+  <a class="btn" href="{{ url_for('assistant.page') }}">AI assistant</a>
+  <a class="btn" href="{{ url_for('quizzes.index') }}">Quizzes</a>
+  <a class="btn btn-outline" href="{{ url_for('account.profile') }}">My profile</a>
+</p>
+{% endblock %}

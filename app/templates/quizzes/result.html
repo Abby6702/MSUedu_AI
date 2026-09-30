@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Quiz result – MSUEdu AI{% endblock %}
+{% block content %}
+{% set revealed = attempt.answers_revealed %}
+<p><a href="{{ url_for('quizzes.index') }}">← Back to quizzes</a></p>
+<h1>{{ attempt.subject_name or 'Quiz' }}: {{ attempt.topic }}</h1>
+<p class="meta">{{ attempt.difficulty|capitalize }} · {{ attempt.mode|capitalize }} mode ·
+  {{ attempt.submitted_at|local_dt }} (PH time)</p>
+
+<div class="card score-box">
+  <p class="stat-number">{{ attempt.score }} / {{ attempt.total }}</p>
+  <p>questions correct on this attempt.</p>
+  <p class="hint">This score only describes this one AI-made quiz. It is not proof that you
+    have mastered the topic.</p>
+</div>
+
+{% if not revealed %}
+  <form method="post" action="{{ url_for('quizzes.reveal', attempt_id=attempt.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p>Ready to see the correct answers and explanations?
+      <button class="btn btn-outline" type="submit">Reveal answers</button></p>
+  </form>
+{% endif %}
+
+<h2>Your answers</h2>
+{% for it in items %}
+<article class="card review-item {{ 'ok' if it.is_correct else 'bad' }}">
+  <p><strong>{{ it.position }}. {{ it.question_text }}</strong>
+    <span class="badge {{ 'badge-accepted' if it.is_correct else 'badge-declined' }}">
+      {{ 'Correct' if it.is_correct else 'Not correct' }}</span></p>
+  <p>Your answer: {{ it.your_answer }}</p>
+  {% if revealed %}
+    <p>Correct answer: <strong>{{ it.correct_answer_text }}</strong></p>
+    <p class="preline">Explanation: {{ it.explanation }}</p>
+    {% if it.q_type == 'short' and not it.is_correct %}
+      <p class="hint">Short answers are matched by text. If your answer means the same
+        thing, compare it with the answer above.</p>
+    {% endif %}
+  {% endif %}
+</article>
+{% endfor %}
+
+<p class="quick-links">
+  <a class="btn" href="{{ url_for('quizzes.take', quiz_id=attempt.quiz_id) }}">Practice again</a>
+  <a class="btn btn-outline" href="{{ url_for('quizzes.history', quiz_id=attempt.quiz_id) }}">All attempts</a>
+</p>
+{% if revealed %}
+  <p class="hint">Explanations are written by AI and may contain mistakes.</p>
+{% endif %}
+{% endblock %}

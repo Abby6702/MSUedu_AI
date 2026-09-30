@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Propose another time – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Propose another time</h1>
+  <p><a href="{{ url_for('bookings.tutor_requests') }}">← Back to requests</a></p>
+  <div class="card">
+    <p><strong>{{ req.subject_name }}:</strong> {{ req.topic }}</p>
+    <p class="meta">Student: {{ req.student_name }}</p>
+    <p><strong>They asked for:</strong> {{ req.start_at|local_range(req.end_at) }}</p>
+  </div>
+  <p class="hint">Your proposal must fit your weekly availability. The student must accept it before anything is confirmed. Times are Philippine time.</p>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="date">Date</label>
+    <input id="date" name="date" type="date" required min="{{ min_date }}" max="{{ max_date }}"
+           value="{{ data.get('date') or '' }}">
+
+    <label for="time">Start time</label>
+    <input id="time" name="time" type="time" required value="{{ data.get('time') or '' }}">
+
+    <label for="duration">Length</label>
+    <select id="duration" name="duration" required>
+      {% for d in durations %}
+        <option value="{{ d }}" {% if data.get('duration')|string == d|string or (not data.get('duration') and d == 60) %}selected{% endif %}>{{ d }} minutes</option>
+      {% endfor %}
+    </select>
+
+    <label for="note">Message to the student (optional)</label>
+    <textarea id="note" name="note" rows="3" maxlength="500">{{ data.get('note') or '' }}</textarea>
+
+    <button class="btn" type="submit">Send proposal</button>
+  </form>
+</section>
+{% endblock %}

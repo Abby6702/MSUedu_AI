@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Please confirm – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>{{ info.title }}</h1>
+  <div class="card">
+    <p><strong>{{ target.full_name }}</strong> ({{ target.role|capitalize }})</p>
+    <p class="meta">{{ target.email }}</p>
+  </div>
+  <p>{{ info.text }}</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p class="review-actions">
+      <button class="btn {{ 'btn-danger' if info.danger else '' }}" type="submit">{{ info.button }}</button>
+      <a class="btn btn-outline" href="{{ back_url }}">No, go back</a>
+    </p>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Record session – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Record this session</h1>
+  <p><a href="{{ url_for('bookings.tutor_requests') }}">← Back to requests</a></p>
+  <div class="card">
+    <p><strong>{{ s.subject_name }}:</strong> {{ s.topic }}</p>
+    <p class="meta">Student: {{ s.student_name }} · {{ s.start_at|local_range(s.end_at) }}</p>
+  </div>
+  <p class="hint">The student can read this record. Write only what you covered and observed
+    in the session. Do not include private information or judgments about the student's ability.</p>
+
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="topics_covered">Topics covered</label>
+    <textarea id="topics_covered" name="topics_covered" rows="2" required minlength="3" maxlength="500">{{ data.get('topics_covered') or '' }}</textarea>
+
+    <label for="outcomes">Learning outcomes (what the student practised or achieved)</label>
+    <textarea id="outcomes" name="outcomes" rows="3" required minlength="3" maxlength="1000">{{ data.get('outcomes') or '' }}</textarea>
+
+    <label for="next_steps">Next steps (optional)</label>
+    <textarea id="next_steps" name="next_steps" rows="2" maxlength="500">{{ data.get('next_steps') or '' }}</textarea>
+
+    <h2>Recap for the student (optional)</h2>
+    <p class="hint">You can write it yourself, or ask the AI for a <strong>draft</strong> based only on
+      the three boxes above. AI drafts can contain mistakes, so read and correct it before saving.</p>
+    <p class="review-actions">
+      <button type="button" class="btn btn-outline" id="genSummary"
+              data-url="{{ url_for('progress.summary', request_id=s.id) }}"
+              data-csrf="{{ csrf_token() }}">Write an AI draft</button>
+    </p>
+    <p class="hint" id="genStatus" role="status"></p>
+    <label for="summary_text" class="sr-only">Recap</label>
+    <textarea id="summary_text" name="summary_text" rows="5" maxlength="1500">{{ data.get('summary_text') or '' }}</textarea>
+    <input type="hidden" id="ai_assisted" name="ai_assisted" value="{{ '1' if data.get('ai_assisted') else '0' }}">
+
+    <button class="btn" type="submit">Save record</button>
+  </form>
+</section>
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+{% endblock %}

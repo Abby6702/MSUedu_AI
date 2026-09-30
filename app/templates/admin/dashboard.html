@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Admin overview – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+
+{% if stats %}
+<div class="grid">
+  <article class="card stat"><span class="stat-number">{{ stats.users.student }}</span> Students</article>
+  <article class="card stat"><span class="stat-number">{{ stats.users.tutor }}</span> Tutors registered</article>
+  <article class="card stat"><span class="stat-number">{{ stats.approved_tutors }}</span> Approved, active tutors</article>
+  <article class="card stat"><span class="stat-number">{{ stats.pending_tutors }}</span> Tutor profiles awaiting review</article>
+  <article class="card stat"><span class="stat-number">{{ stats.requests_total }}</span> Requests in total</article>
+  <article class="card stat"><span class="stat-number">{{ stats.requests_open }}</span> Open requests</article>
+  <article class="card stat"><span class="stat-number">{{ stats.sessions_completed }}</span> Completed sessions</article>
+  <article class="card stat"><span class="stat-number">{{ stats.active_subjects }}</span> Active subjects</article>
+  <article class="card stat"><span class="stat-number">{{ stats.feedback_visible }}</span> Visible feedback entries</article>
+  <article class="card stat"><span class="stat-number">{{ stats.inactive_users }}</span> Deactivated accounts</article>
+  <article class="card stat"><span class="stat-number">{{ stats.users.admin }}</span> Administrators</article>
+</div>
+<p class="note">These numbers come from the real database. Use the tabs above to review tutors, manage accounts, monitor requests and moderate feedback.</p>
+{% else %}
+  <div class="flash flash-error" role="alert">Could not load the statistics. Please try again.</div>
+{% endif %}
+{% endblock %}
