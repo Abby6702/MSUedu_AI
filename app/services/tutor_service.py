@@ -14,7 +14,7 @@ SORTS = {
 }
 
 SEARCH_BASE = """
-SELECT u.id, u.full_name, tp.course, tp.year_level, tp.tutoring_format,
+SELECT u.id, u.full_name, tp.course, tp.year_level, tp.tutoring_format, (tp.photo_filename IS NOT NULL) AS has_photo,
   (SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ', ')
      FROM tutor_subjects ts JOIN subjects s ON s.id = ts.subject_id
     WHERE ts.tutor_id = u.id AND s.is_active = 1) AS subject_names,
@@ -186,7 +186,8 @@ def get_public_tutor(tutor_id):
     """What students may see. Email and student number are NOT selected.
     Returns None unless the tutor is approved and active."""
     tutor = query_one(
-        "SELECT u.id, u.full_name, tp.course, tp.year_level, tp.bio, tp.tutoring_format "
+        "SELECT u.id, u.full_name, tp.course, tp.year_level, tp.bio, tp.tutoring_format, "
+        "tp.skills, tp.education, tp.experience, (tp.photo_filename IS NOT NULL) AS has_photo "
         "FROM users u JOIN tutor_profiles tp ON tp.user_id = u.id "
         "WHERE u.id = %s AND u.role = 'tutor' AND u.is_active = 1 "
         "AND tp.approval_status = 'approved'",

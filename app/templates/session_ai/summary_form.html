@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Session summary – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Session summary</h1>
+  <p><a href="{{ url_for('bookings.tutor_requests') }}">← Back to requests</a></p>
+  <div class="card">
+    <p><strong>{{ sess.subject_name }}:</strong> {{ sess.topic }}</p>
+    <p class="meta">Student: {{ sess.student_name }} · {{ sess.start_at|local_range(sess.end_at) }}</p>
+  </div>
+
+  {% if status == 'approved' %}
+    <div class="flash flash-success">This summary is shared with the student. Saving as a draft hides it again.</div>
+  {% elif status == 'draft' %}
+    <div class="flash flash-info">This is a draft. The student cannot see it yet.</div>
+  {% endif %}
+
+  <h2>Optional: draft it with AI</h2>
+  <p class="hint">Type your own notes about the session below. The AI turns them into a draft using <strong>only what you wrote</strong>.
+    Your notes are not saved, and the AI never receives the student's name. Please do not type private information. If the
+    server uses an online AI provider, your notes are sent to that provider. AI drafts can contain mistakes, so read and correct everything.</p>
+  <label for="draftNotes">Your notes about the session (not saved)</label>
+  <textarea id="draftNotes" rows="5" maxlength="2000"></textarea>
+  <p><button type="button" id="genDraft" class="btn btn-outline"
+             data-url="{{ url_for('session_ai.summary_draft', request_id=sess.id) }}"
+             data-csrf="{{ csrf_token() }}">Write an AI draft</button></p>
+  <p id="draftStatus" class="hint" role="status"></p>
+
+  <h2>Summary for the student</h2>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" id="ai_assisted" name="ai_assisted" value="{{ '1' if data.ai_assisted else '0' }}">
+
+    <label for="topics_covered">Topics covered</label>
+    <textarea id="topics_covered" name="topics_covered" rows="3" required minlength="3" maxlength="600">{{ data.topics_covered }}</textarea>
+
+    <label for="strengths">Strengths you observed (optional)</label>
+    <textarea id="strengths" name="strengths" rows="3" maxlength="600">{{ data.strengths }}</textarea>
+
+    <label for="improvements">Areas to improve (optional)</label>
+    <textarea id="improvements" name="improvements" rows="3" maxlength="600">{{ data.improvements }}</textarea>
+
+    <label for="practice">Recommended practice (optional)</label>
+    <textarea id="practice" name="practice" rows="3" maxlength="600">{{ data.practice }}</textarea>
+
+    <label for="next_lesson_id">Recommended next lesson (optional)</label>
+    <select id="next_lesson_id" name="next_lesson_id">
+      <option value="">No lesson</option>
+      {% for l in lessons %}
+        <option value="{{ l.id }}" {% if data.next_lesson_id == l.id %}selected{% endif %}>{{ l.title }} ({{ l.topic_name }})</option>
+      {% endfor %}
+    </select>
+    {% if not lessons %}<p class="hint">This subject has no lessons yet.</p>{% endif %}
+
+    <p class="hint">Describe what you saw in this session. Do not judge the student's ability or say they have mastered a topic.
+      The student can read what you share.</p>
+    <p class="review-actions">
+      <button class="btn" type="submit" name="action" value="share">Save and share with student</button>
+      <button class="btn btn-outline" type="submit" name="action" value="draft">Save as draft (not shared)</button>
+    </p>
+  </form>
+</section>
+<script src="{{ url_for('static', filename='js/summary_draft.js') }}"></script>
+{% endblock %}

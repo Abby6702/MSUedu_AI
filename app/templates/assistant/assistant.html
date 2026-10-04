@@ -1,56 +1,70 @@
 {% extends "base.html" %}
-{% block title %}AI learning assistant – MSUEdu AI{% endblock %}
+{% block title %}AI tutor – MSUEdu AI{% endblock %}
 {% block content %}
-<h1>AI learning assistant</h1>
+<h1>AI tutor</h1>
 <p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a></p>
 
 <div id="assistant"
      data-csrf="{{ csrf_token() }}"
-     data-chat-url="{{ url_for('assistant.chat') }}"
+     data-conv-url="{{ url_for('assistant.conversations') }}"
      data-summarize-url="{{ url_for('assistant.summarize') }}"
      data-status-url="{{ url_for('assistant.status') }}">
 
   <div id="aiBanner" class="flash flash-error" role="alert" hidden></div>
 
-  <p class="hint">AI answers can contain mistakes. Check important information with your
-    textbook, instructor or a tutor. Conversations are not saved on the server. Please do not
-    type passwords or private information.</p>
+  <p class="hint">The AI tutor is an artificial intelligence, not a human tutor, and it can make mistakes. Check
+    important points with your textbook, instructor or a human tutor. It is designed to help you understand, so
+    expect explanations, examples and hints rather than answers to copy. Your tutor conversations are saved so you
+    can continue them. Only you can see them in the app, and you can delete them at any time. Please do not type
+    passwords or private information.</p>
 
   <div class="tab-buttons" role="tablist">
     <button type="button" class="tab-btn active" id="tabChat" role="tab" aria-selected="true"
-            aria-controls="panelChat">Ask a question</button>
+            aria-controls="panelChat">Ask the AI tutor</button>
     <button type="button" class="tab-btn" id="tabSummary" role="tab" aria-selected="false"
             aria-controls="panelSummary">Summarize notes</button>
   </div>
 
   <!-- Chat -->
-  <section id="panelChat" class="card" role="tabpanel" aria-labelledby="tabChat">
-    <div class="filter-form">
-      <div><label for="chatSubject">Subject (optional)</label>
-        <select id="chatSubject">
-          <option value="">No specific subject</option>
-          {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
-        </select></div>
-      <div><label for="chatTopic">Topic (optional)</label>
-        <input id="chatTopic" type="text" maxlength="100" placeholder="e.g. derivatives"></div>
-    </div>
+  <section id="panelChat" class="assistant-layout" role="tabpanel" aria-labelledby="tabChat">
+    <aside class="card conv-panel" aria-label="Your conversations">
+      <button type="button" class="btn btn-small" id="newChat">New conversation</button>
+      <div id="convList" aria-live="polite"><p class="empty">Loading…</p></div>
+    </aside>
 
-    <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation">
-      <p class="empty" id="chatEmpty">Ask anything about your studies to begin.</p>
-    </div>
+    <div class="card">
+      <div class="filter-form">
+        <div><label for="chatSubject">Subject (optional)</label>
+          <select id="chatSubject">
+            <option value="">No specific subject</option>
+            {% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+          </select></div>
+        <div><label for="chatLesson">Lesson (optional)</label>
+          <select id="chatLesson">
+            <option value="">No specific lesson</option>
+            {% for l in lessons %}<option value="{{ l.id }}" data-subject="{{ l.subject_id }}">{{ l.subject_name }}: {{ l.title }}</option>{% endfor %}
+          </select></div>
+      </div>
+      <p class="hint" id="contextNote">Context is chosen before the first message. A lesson also sets the subject.</p>
 
-    <label for="chatInput">Your question</label>
-    <textarea id="chatInput" rows="3" maxlength="{{ max_message }}"
-              placeholder="Explain how to find the limit of…"></textarea>
-    <p class="review-actions">
-      <button type="button" class="btn" id="chatSend">Send</button>
-      <button type="button" class="btn btn-outline" id="chatClear">New conversation</button>
-    </p>
-    <p class="hint" id="chatBusy" hidden>Thinking… the first answer can take a minute while the model loads.</p>
+      <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation">
+        <p class="empty" id="chatEmpty">Ask anything about your studies to begin.</p>
+      </div>
+
+      <label for="chatInput">Your question</label>
+      <textarea id="chatInput" rows="3" maxlength="{{ max_message }}"
+                placeholder="Explain how a for loop works…"></textarea>
+      <p class="review-actions">
+        <button type="button" class="btn" id="chatSend">Send</button>
+        <button type="button" class="btn btn-outline" id="chatClear">Clear messages</button>
+      </p>
+      <p class="hint" id="chatBusy" hidden>The AI tutor is thinking… the first answer can take a minute while the model loads.</p>
+    </div>
   </section>
 
   <!-- Summarize -->
   <section id="panelSummary" class="card" role="tabpanel" aria-labelledby="tabSummary" hidden>
+    <p class="hint">Pasted notes are used for the summary and are not saved.</p>
     <label for="notesInput">Paste your notes</label>
     <textarea id="notesInput" rows="8" maxlength="{{ max_notes }}"></textarea>
     <label for="summaryLength">Length</label>

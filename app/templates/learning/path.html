@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ subject.name }} – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>{{ subject.name }}</h1>
+<p><a href="{{ url_for('learning.index') }}">← All learning paths</a></p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+{% if lp.total %}
+  <p><strong>{{ lp.percent }}%</strong> complete ({{ lp.done }} of {{ lp.total }} lessons)</p>
+  <progress max="100" value="{{ lp.percent }}">{{ lp.percent }}%</progress>
+  {% if lp.next %}
+    <p class="proposal">Up next: <a href="{{ url_for('learning.lesson', lesson_id=lp.next.id) }}">{{ lp.next.title }}</a> ({{ lp.next.topic }})</p>
+  {% else %}
+    <p class="flash flash-success">You completed every lesson in this path.</p>
+  {% endif %}
+
+  {% for level in lp.levels %}
+  <section class="card path-level">
+    <h2>Level {{ level.level }} <span class="meta">{{ level.done }} / {{ level.total }}</span></h2>
+    {% for topic in level.topics %}
+      <h3 class="card-title">{{ topic.name }}</h3>
+      <ul class="lesson-list">
+        {% for l in topic.lessons %}
+          <li>
+            <a href="{{ url_for('learning.lesson', lesson_id=l.id) }}">{{ l.title }}</a>
+            <span class="meta">{{ l.difficulty|capitalize }} · {{ l.minutes }} min</span>
+            {% if l.completed %}<span class="badge badge-accepted">Done</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </section>
+  {% endfor %}
+{% elif not error %}
+  <p class="empty">This subject has no lessons yet.</p>
+{% endif %}
+{% endblock %}

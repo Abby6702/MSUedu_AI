@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "partials/charts.html" import bar_chart %}
+{% block title %}Quiz overview – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<h2>Quiz overview</h2>
+<p class="hint">Totals only. No student names, questions or answers appear here, and a score describes one AI-made quiz, not mastery.</p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if d %}
+<div class="grid">
+  <article class="card stat"><span class="stat-number">{{ d.quizzes }}</span> Quizzes generated</article>
+  <article class="card stat"><span class="stat-number">{{ d.attempts }}</span> Attempts</article>
+  <article class="card stat"><span class="stat-number">{{ d.students }}</span> Students who took quizzes</article>
+  <article class="card stat"><span class="stat-number">{{ (d.average ~ '%') if d.average is not none else '—' }}</span> Average score</article>
+  <article class="card stat"><span class="stat-number">{{ (d.linked_percent ~ '%') if d.linked_percent is not none else '—' }}</span> Linked to a lesson topic ({{ d.linked }})</article>
+  <article class="card stat"><span class="stat-number">{{ (d.generation.rate ~ '%') if d.generation.rate is not none else '—' }}</span> AI quiz success, last 30 days ({{ d.generation.ok }} of {{ d.generation.total }})</article>
+</div>
+
+<h3>Results by difficulty</h3>
+{% if d.by_difficulty %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Difficulty</th><th>Attempts</th><th>Average score</th></tr></thead>
+  <tbody>{% for r in d.by_difficulty %}<tr><td>{{ r.difficulty|capitalize }}</td><td>{{ r.attempts }}</td>
+    <td>{{ (r.average ~ '%') if r.average is not none else '—' }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">No quiz attempts yet.</p>{% endif %}
+
+<h3>Attempts by subject</h3>
+{% if d.by_subject %}
+  {{ bar_chart(d.chart, 'Quiz attempts by subject') }}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Subject</th><th>Attempts</th><th>Average score</th></tr></thead>
+    <tbody>{% for r in d.by_subject %}<tr><td>{{ r.name }}</td><td>{{ r.attempts }}</td>
+      <td>{{ (r.average ~ '%') if r.average is not none else '—' }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+{% else %}<p class="empty">No quiz attempts yet.</p>{% endif %}
+
+<h3>Lowest-scoring lesson topics</h3>
+<p class="hint">Topics with at least 3 attempts, across all students. Useful for deciding which lessons to improve.</p>
+{% if d.hardest %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Topic</th><th>Subject</th><th>Attempts</th><th>Average score</th></tr></thead>
+  <tbody>{% for r in d.hardest %}<tr><td>{{ r.topic }}</td><td>{{ r.subject }}</td><td>{{ r.attempts }}</td>
+    <td>{{ (r.average ~ '%') if r.average is not none else '—' }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">Not enough topic-linked attempts yet.</p>{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,6 +1,6 @@
 """Creates and configures the Flask application (the 'app factory')."""
 import click
-from flask import Flask, flash, g, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from config import Config
 
@@ -16,6 +16,8 @@ CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' 
 
 def create_app(config_class=Config):
     app = Flask(__name__)
+    from app.upload_limits import AppRequest
+    app.request_class = AppRequest          # lets the file upload route accept bigger requests
     app.config.from_object(config_class)
 
     if not app.config.get("SECRET_KEY"):
@@ -26,9 +28,23 @@ def create_app(config_class=Config):
 
     csrf.init_app(app)
 
+       # Real-time layer (chat and WebRTC signalling). Threading mode works well on Windows.
+    from app.extensions import socketio
+    from app.sockets import register_events
+    from app.deploy_checks import parse_origins
+    socketio.init_app(app, async_mode="threading", max_http_buffer_size=200_000,
+                         cors_allowed_origins=parse_origins(app.config.get("SOCKETIO_ORIGINS")))
+    register_events(socketio)
+
     from app.services import notification_service, settings_service, user_service
 
     # ---- Runs before every request: who is logged in? ----
+    @app.before_request
+    def reject_oversized_request():
+        limit = request.max_content_length
+        if limit is not None and request.content_length is not None and request.content_length > limit:
+            abort(413)
+
     @app.before_request
     def load_current_user():
         g.user = None
@@ -74,7 +90,8 @@ def create_app(config_class=Config):
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "same-origin")
-        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault("Permissions-Policy",
+                                       "camera=(self), microphone=(self), display-capture=(self), geolocation=()")
         if app.config.get("CSP_ENABLED"):
             response.headers.setdefault("Content-Security-Policy", CSP)
         if app.config.get("SESSION_COOKIE_SECURE"):          # only meaningful over HTTPS
@@ -124,9 +141,15 @@ def create_app(config_class=Config):
     from app.routes.agent import agent_bp
     from app.routes.notifications import notifications_bp
     from app.routes.progress import progress_bp
+    from app.routes.learning import learning_bp
+    from app.routes.people import people_bp
+    from app.routes.live import live_bp
+    from app.routes.session_ai import session_ai_bp
+    from app.routes.session_files import session_files_bp
+    from app.routes.content import content_bp
     for bp in (main_bp, auth_bp, account_bp, student_bp, tutor_bp, admin_bp,
                bookings_bp, assistant_bp, quizzes_bp, agent_bp,
-               notifications_bp, progress_bp):
+               notifications_bp, progress_bp, learning_bp, people_bp, live_bp, session_ai_bp, session_files_bp, content_bp):
         app.register_blueprint(bp)
 
     # ---- Terminal command:  flask --app run create-admin ----

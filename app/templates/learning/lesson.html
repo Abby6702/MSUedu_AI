@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('learning.path', subject_id=lesson.subject_id) }}">← {{ lesson.subject_name }} path</a></p>
+<section class="auth-card wide">
+  <h1>{{ lesson.title }}</h1>
+  <p class="meta">{{ lesson.subject_name }} · {{ lesson.topic_name }} (Level {{ lesson.level }}) ·
+    {{ lesson.difficulty|capitalize }} · about {{ lesson.minutes }} minutes</p>
+
+  <div class="lesson-body">{{ lesson.body }}</div>
+
+  {% if lesson.completed %}
+    <p class="flash flash-success">You completed this lesson.</p>
+  {% else %}
+    <form method="post" action="{{ url_for('learning.complete', lesson_id=lesson.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn" type="submit">Mark as complete</button>
+    </form>
+  {% endif %}
+  <p class="hint">Stuck? Ask the <a href="{{ url_for('assistant.page') }}">AI assistant</a> to explain it a different way,
+    and check important points with your textbook or a tutor.</p>
+</section>
+{% endblock %}

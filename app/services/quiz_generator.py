@@ -50,5 +50,13 @@ def generate_quiz(user_id, subject_id, subject_name, data):
         ai_service._log_usage(user_id, "quiz", subject_id, False, "db_error", started)
         return 500, {"ok": False, "error": "The quiz could not be saved. Please try again."}
 
+    ai_service._log_usage 
+    if data.get("topic_id"):
+        try:
+            quiz_service.link_topic(quiz_id, user_id, data["topic_id"])
+        except Exception:                         # the quiz exists; only the link failed
+            current_app.logger.exception("Could not link the quiz to its topic")
+
     ai_service._log_usage(user_id, "quiz", subject_id, True, None, started)
+    return 200, {"ok": True, "quiz_id": quiz_id, "count": len(questions)}
     return 200, {"ok": True, "quiz_id": quiz_id, "count": len(questions)}

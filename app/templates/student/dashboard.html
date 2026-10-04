@@ -27,7 +27,10 @@
         <span class="meta">{{ a.submitted_at|local_dt }}</span></li>{% endfor %}</ul>
     {% else %}<p class="empty">No quizzes yet.</p>{% endif %}
     <a href="{{ url_for('quizzes.index') }}">Quizzes</a></article>
-  <article class="card"><h2>Suggested subjects</h2>
+  <article class="card"><h2>Recommended for you</h2>
+      {% if recs %}<ul>{% for r in recs %}<li>{{ r.title }}</li>{% endfor %}</ul>
+      {% else %}<p class="empty">No recommendations yet. Take a quiz linked to a lesson topic.</p>{% endif %}
+      <a href="{{ url_for('learning.recommendations') }}">See all</a></article><h2>Suggested subjects</h2>
     {% if suggested %}
       <ul>{% for s in suggested %}
         <li><a href="{{ url_for('student.find_tutors', subject_id=s.id) }}">{{ s.name }}</a></li>

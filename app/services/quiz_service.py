@@ -211,3 +211,10 @@ def reveal_attempt(attempt_id, user_id):
     """user_id in WHERE means nobody can reveal someone else's attempt."""
     execute("UPDATE quiz_attempts SET answers_revealed = 1 WHERE id = %s AND user_id = %s",
             (attempt_id, user_id))
+
+    
+
+def link_topic(quiz_id, user_id, topic_id):
+    """Attach a lesson topic to a quiz. user_id in WHERE: only the owner's quiz changes."""
+    execute("UPDATE quizzes SET topic_id = %s WHERE id = %s AND user_id = %s",
+            (topic_id, quiz_id, user_id))

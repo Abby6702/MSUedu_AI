@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Sharing with tutors – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Sharing with tutors</h1>
+  <p><a href="{{ url_for('learning.profile') }}">← My learning profile</a></p>
+  <p><strong>Sharing is {{ 'on' if enabled else 'off' }}.</strong></p>
+  <p>If you switch this on, a tutor who has a <strong>confirmed or completed session with you</strong> can see:</p>
+  <ul>
+    <li>which topics are strong, developing or need work, with your quiz averages for them</li>
+    <li>how far you are through each lesson path</li>
+    <li>your written learning goals</li>
+  </ul>
+  <p>They <strong>cannot</strong> see your AI tutor conversations, your individual quiz answers or your email. You can switch it off at any time.
+    It is off unless you turn it on.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="choice"><input type="checkbox" name="share" {% if enabled %}checked{% endif %}>
+      Share my learning summary with tutors I have a session with</label>
+    <button class="btn" type="submit">Save</button>
+  </form>
+</section>
+{% endblock %}

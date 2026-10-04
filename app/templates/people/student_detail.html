@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ student.full_name }} – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('people.students') }}">← My students</a></p>
+<section class="auth-card wide">
+  <h1>{{ student.full_name }}</h1>
+  <p class="meta">{{ student.course or 'Course not set' }}{% if student.year_level %} · Year {{ student.year_level }}{% endif %}</p>
+  {% if student.learning_goals %}<p class="preline"><strong>Learning goals:</strong> {{ student.learning_goals }}</p>{% endif %}
+
+  <h2>Sessions with you</h2>
+  {% for s in sessions %}
+  <article class="card">
+    <p><strong>{{ s.subject_name }}:</strong> {{ s.topic }}
+      <span class="badge badge-{{ s.status }}">{{ s.status|capitalize }}</span></p>
+    <p class="meta">{{ s.start_at|local_range(s.end_at) }}</p>
+    {% if s.status == 'completed' %}
+      <a class="btn btn-small btn-outline" href="{{ url_for('progress.record', request_id=s.id) }}">
+        {{ 'Edit session record' if s.has_record else 'Record session' }}</a>
+    {% endif %}
+  </article>
+  {% else %}<p class="empty">No sessions.</p>{% endfor %}
+
+  <h2>Learning summary</h2>
+  {% if not student.shared %}
+    <p class="flash flash-info">This student has not shared their learning summary with tutors. You can still ask them
+      what they find difficult.</p>
+  {% elif summary_error %}
+    <p class="flash flash-error" role="alert">The summary could not be loaded. Please try again.</p>
+  {% elif summary %}
+    <p class="hint">Shared by the student. It comes from quizzes linked to lesson topics and lessons they completed. It is a
+      starting point for your conversation, not a verdict, and it does not prove mastery. You cannot see their AI chats or individual answers.</p>
+    <div class="grid">
+      <article class="card"><h3>Needs work</h3>
+        {% for t in summary.needs_work %}<p>{{ t.topic_name }} <span class="meta">{{ t.subject_name }} · {{ t.average }}% average, latest {{ t.latest }}%</span></p>
+        {% else %}<p class="empty">None.</p>{% endfor %}</article>
+      <article class="card"><h3>Developing</h3>
+        {% for t in summary.developing %}<p>{{ t.topic_name }} <span class="meta">{{ t.average }}% average</span></p>
+        {% else %}<p class="empty">None.</p>{% endfor %}</article>
+      <article class="card"><h3>Strong</h3>
+        {% for t in summary.strong %}<p>{{ t.topic_name }} <span class="meta">{{ t.average }}% average</span></p>
+        {% else %}<p class="empty">None yet.</p>{% endfor %}</article>
+    </div>
+    <h3>Lesson progress</h3>
+    {% for sub in summary.subjects %}<p>{{ sub.name }}: {{ sub.percent }}% ({{ sub.done }} of {{ sub.total }} lessons)</p>
+    {% else %}<p class="empty">No lessons started.</p>{% endfor %}
+  {% endif %}
+</section>
+{% endblock %}

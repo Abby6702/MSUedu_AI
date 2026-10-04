@@ -1,7 +1,7 @@
 <nav class="tabs" aria-label="Administrator sections">
   {% for endpoint, label in [('admin.dashboard', 'Overview'), ('admin.user_list', 'Users'),
-      ('admin.review_tutors', 'Tutors'), ('admin.subjects', 'Subjects'),
-      ('admin.request_list', 'Requests'), ('admin.feedback_list', 'Feedback'),
+      ('admin.review_tutors', 'Tutors'), ('admin.subjects', 'Subjects'), ('content.index', 'Curriculum'),
+      ('content.quizzes', 'Quizzes'), ('admin.request_list', 'Requests'), ('admin.feedback_list', 'Feedback'),
       ('admin.reports', 'Reports'), ('admin.audit_list', 'Audit log'), ('admin.settings', 'Settings')] %}
     <a href="{{ url_for(endpoint) }}" class="{{ 'active' if request.endpoint == endpoint else '' }}">{{ label }}</a>
   {% endfor %}

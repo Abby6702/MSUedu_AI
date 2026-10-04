@@ -1,14 +1,27 @@
 {% extends "base.html" %}
+{% from "partials/avatar.html" import avatar %}
 {% block title %}{{ tutor.full_name }} – MSUEdu AI{% endblock %}
 {% block content %}
 <p><a href="{{ url_for('student.find_tutors') }}">← Back to search</a></p>
 <section class="auth-card wide">
-  <h1>{{ tutor.full_name }}</h1>
-  <p class="meta">{{ tutor.course or 'Course not set' }}{% if tutor.year_level %} · Year {{ tutor.year_level }}{% endif %}
-    · {{ format_labels[tutor.tutoring_format] }}</p>
+  <div class="tutor-head">
+    {{ avatar(tutor.id, tutor.full_name, tutor.has_photo, 'avatar-lg') }}
+    <div>
+      <h1>{{ tutor.full_name }}</h1>
+      <p class="meta">{{ tutor.course or 'Course not set' }}{% if tutor.year_level %} · Year {{ tutor.year_level }}{% endif %}
+        · {{ format_labels[tutor.tutoring_format] }}</p>
+    </div>
+  </div>
 
   <h2>About</h2>
   <p class="preline">{{ tutor.bio or 'This tutor has not written a biography yet.' }}</p>
+
+  {% if tutor.skills %}
+    <h2>Skills</h2>
+    <ul class="skill-tags">{% for s in tutor.skills.split(', ') %}<li>{{ s }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if tutor.education %}<h2>Education</h2><p>{{ tutor.education }}</p>{% endif %}
+  {% if tutor.experience %}<h2>Experience</h2><p class="preline">{{ tutor.experience }}</p>{% endif %}
 
   <h2>Subjects</h2>
   {% if tutor.subjects %}

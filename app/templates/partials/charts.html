@@ -1,0 +1,54 @@
+{# Charts are plain SVG built from numbers, so they work with our strict security policy
+   (no scripts, no inline styles). Every label goes through normal escaping. #}
+{% macro bar_chart(b, label) %}
+<svg class="chart" viewBox="0 0 {{ b.width }} {{ b.height }}" role="img" aria-label="{{ label }}">
+  <title>{{ label }}</title>
+  {% for r in b.rows %}
+    <text class="chart-label" x="0" y="{{ r.text_y }}">{{ r.label }}<title>{{ r.full }}</title></text>
+    <rect class="chart-bar" x="{{ b.label_w }}" y="{{ r.y }}" width="{{ r.bar_w }}" height="{{ b.bar_h }}" rx="3"></rect>
+    <text class="chart-value" x="{{ b.label_w + r.bar_w + 6 }}" y="{{ r.text_y }}">{{ r.value }}</text>
+  {% endfor %}
+</svg>
+{% endmacro %}
+
+{% macro line_chart(c, label) %}
+<svg class="chart" viewBox="0 0 {{ c.width }} {{ c.height }}" role="img" aria-label="{{ label }}">
+  <title>{{ label }}</title>
+  {% for t in c.y_ticks %}
+    <line class="chart-grid" x1="{{ c.left }}" y1="{{ t.y }}" x2="{{ c.right_x }}" y2="{{ t.y }}"></line>
+    <text class="chart-axis" x="{{ c.left - 6 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}</text>
+  {% endfor %}
+  {% for lab in c.x_labels %}
+    <text class="chart-axis" x="{{ lab.x }}" y="{{ c.height - 8 }}" text-anchor="middle">{{ lab.text }}</text>
+  {% endfor %}
+  {% for s in c.series %}
+    <polyline class="chart-line {{ s.css }}" points="{{ s.points }}" fill="none"></polyline>
+    {% for d in s.dots %}
+      <circle class="chart-dot {{ s.css }}" cx="{{ d.x }}" cy="{{ d.y }}" r="3"><title>{{ s.name }}: {{ d.value }} on {{ d.day }}</title></circle>
+    {% endfor %}
+  {% endfor %}
+</svg>
+<ul class="legend">
+  {% for s in c.series %}<li><span class="swatch {{ s.css }}"></span>{{ s.name }} ({{ s.total }} in total)</li>{% endfor %}
+</ul>
+{% endmacro %}
+
+{% macro series_table(names, table) %}
+<details class="chart-table">
+  <summary>View as a table</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Day</th>{% for n, css in names %}<th>{{ n }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in table %}<tr><td>{{ row.day }}</td>{% for v in row['values'] %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table></div>
+</details>
+{% endmacro %}
+
+{% macro rows_table(heading, rows) %}
+<details class="chart-table">
+  <summary>View as a table</summary>
+  <div class="table-wrap"><table>
+    <thead><tr><th>{{ heading }}</th><th>Count</th></tr></thead>
+    <tbody>{% for label, value in rows %}<tr><td>{{ label }}</td><td>{{ value }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</details>
+{% endmacro %}

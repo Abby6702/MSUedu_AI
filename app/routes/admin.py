@@ -7,7 +7,7 @@ from app import security
 from app import validators_admin as va
 from app import validators_tutor as vt
 from app.auth_utils import role_required
-from app.services import admin_service, settings_service, subject_service
+from app.services import admin_service, analytics_service, settings_service, subject_service
 from app.services import tutor_service as tutors
 from app.services import user_service as users
 
@@ -50,12 +50,18 @@ def _pager(endpoint, page, total, **params):
 @admin_bp.route("/dashboard")
 @role_required("admin")
 def dashboard():
-    stats = None
+    stats = activity = subjects = None
     try:
-        stats = admin_service.overview()
+           stats = admin_service.overview()
     except Exception:
-        current_app.logger.exception("Could not load the overview")
-    return render_template("admin/dashboard.html", stats=stats)
+           current_app.logger.exception("Could not load the overview")
+    try:                                   # the charts failing must not hide the numbers
+           activity = analytics_service.activity()
+           subjects = analytics_service.subject_charts()
+    except Exception:
+           current_app.logger.exception("Could not load the dashboard charts")
+           activity = subjects = None
+    return render_template("admin/dashboard.html", stats=stats, activity=activity, subjects=subjects)
 
 
 @admin_bp.route("/reports")

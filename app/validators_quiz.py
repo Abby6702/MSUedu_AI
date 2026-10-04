@@ -14,8 +14,9 @@ def _to_int(value):
         return None
 
 
-def validate_generate_form(form, valid_subject_ids):
-    """Returns (data, errors). `data` is safe to show back in the form."""
+def validate_generate_form(form, valid_subject_ids, topics=None):
+    """Returns (data, errors). `topics` maps topic id -> {"subject_id": .., "name": ..}.
+    `data` is safe to show back in the form."""
     errors = []
 
     subject_id = _to_int(form.get("subject_id"))
@@ -23,6 +24,14 @@ def validate_generate_form(form, valid_subject_ids):
         errors.append("Choose a subject from the list.")
 
     topic = clean(form.get("topic"))
+    topic_id = _to_int(form.get("topic_id"))
+    if topic_id is not None:
+        chosen = (topics or {}).get(topic_id)
+        if chosen is None or chosen["subject_id"] != subject_id:
+            errors.append("Choose a lesson topic that belongs to the chosen subject.")
+            topic_id = None
+        elif not topic:
+            topic = chosen["name"]          # blank topic text: use the lesson topic's name
     if not 2 <= len(topic) <= 100:
         errors.append("Topic must be 2 to 100 characters.")
 
@@ -48,6 +57,6 @@ def validate_generate_form(form, valid_subject_ids):
         errors.append("Choose a quiz mode.")
         mode = "practice"
 
-    data = {"subject_id": subject_id, "topic": topic, "difficulty": difficulty,
-            "count": count, "types": types or list(TYPES), "mode": mode}
+    data = {"subject_id": subject_id, "topic_id": topic_id, "topic": topic,
+            "difficulty": difficulty, "count": count, "types": types or list(TYPES), "mode": mode}
     return data, errors

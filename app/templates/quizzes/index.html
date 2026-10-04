@@ -22,9 +22,19 @@
       {% endfor %}
     </select>
 
-    <label for="topic">Topic</label>
-    <input id="topic" name="topic" type="text" required minlength="2" maxlength="100"
-           placeholder="e.g. limits and continuity" value="{{ data.topic }}">
+    <label for="topic_id">Lesson topic (optional)</label>
+    <select id="topic_id" name="topic_id">
+      <option value="">Not linked to a lesson</option>
+      {% for t in topics %}
+        <option value="{{ t.id }}" {% if data.topic_id == t.id %}selected{% endif %}>{{ t.subject_name }}: {{ t.name }}</option>
+      {% endfor %}
+    </select>
+    <p class="hint">Linking a quiz to a lesson topic lets your learning profile track strengths and weaknesses for that topic.
+      The topic must belong to the subject you chose.</p>
+
+    <label for="topic">Topic wording</label>
+    <input id="topic" name="topic" type="text" maxlength="100"
+           placeholder="e.g. limits and continuity (blank = use the lesson topic)" value="{{ data.topic }}">
 
     <label for="difficulty">Difficulty</label>
     <select id="difficulty" name="difficulty">

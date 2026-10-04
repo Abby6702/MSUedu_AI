@@ -2,7 +2,7 @@ from flask import Blueprint, abort, current_app, flash, g, render_template, requ
 from app import validators_tutor as vt
 from app.auth_utils import role_required
 from app.services import progress_service as ps
-from app.services import quiz_service
+from app.services import quiz_service, recommendation_service
 from app.services import request_service as rs
 from app.services import subject_service, tutor_service as tutors
 from app.services import user_service as users
@@ -14,16 +14,18 @@ student_bp = Blueprint("student", __name__, url_prefix="/student")
 @role_required("student")
 def dashboard():
     profile = users.get_profile(g.user["id"], "student") or {}
-    suggested, upcoming, pending, activity = [], [], [], []
+    suggested, upcoming, pending, activity, recs = [], [], [], [], []
     try:
         suggested = subject_service.list_subjects()[:6]
         groups = rs.grouped_requests(g.user["id"], "student")
         upcoming, pending = groups["upcoming"][:3], groups["attention"][:3]
         activity = quiz_service.recent_attempts(g.user["id"], 3)
+        recs = recommendation_service.top_active(g.user["id"], 3)
     except Exception:
         current_app.logger.exception("Could not load dashboard data")
-    return render_template("student/dashboard.html", profile=profile, suggested=suggested,
+    return render_template("student/dashboard.html",recs=recs, profile=profile, suggested=suggested,
                            upcoming=upcoming, pending=pending, activity=activity)
+                           
 
 
 @student_bp.route("/tutors")

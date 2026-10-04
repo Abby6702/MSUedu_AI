@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Session summary – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Summary of your session</h1>
+  <p><a href="{{ url_for('learning.profile') }}">← My learning profile</a></p>
+  <p class="meta">{{ s.subject_name }} with {{ s.tutor_name }} · {{ s.start_at|local_range(s.end_at) }}</p>
+  <div class="flash flash-info">Your tutor chose to share this. It is one tutor's view of one session, not a test result, and it
+    does not prove that you have mastered a topic.
+    {% if s.ai_assisted %}It was drafted with AI assistance and reviewed by your tutor, so it may contain mistakes.{% endif %}</div>
+
+  <h2>Topics covered</h2>
+  <p class="preline">{{ s.topics_covered }}</p>
+  {% if s.strengths %}<h2>Strengths</h2><p class="preline">{{ s.strengths }}</p>{% endif %}
+  {% if s.improvements %}<h2>Areas to improve</h2><p class="preline">{{ s.improvements }}</p>{% endif %}
+  {% if s.practice %}<h2>Recommended practice</h2><p class="preline">{{ s.practice }}</p>{% endif %}
+  {% if s.lesson_id %}
+    <h2>Suggested next lesson</h2>
+    <p><a class="btn" href="{{ url_for('learning.lesson', lesson_id=s.lesson_id) }}">{{ s.lesson_title }}</a></p>
+  {% endif %}
+</section>
+{% endblock %}

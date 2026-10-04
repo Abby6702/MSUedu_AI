@@ -7,19 +7,27 @@
      <strong>It is not an official website of Mindanao State University and is not endorsed by it.</strong></p>
 
   <h2>How the AI is used</h2>
+        <li>Tutors may use an AI helper during sessions to draft exercises, explanations and summaries. They type only the topic and their own notes, never your name. <strong>You only see a session summary after your tutor reviews it and chooses to share it.</strong> It does not feed the recommendation rules, which use only your quiz results and completed lessons.</li>
   <ul>
-    <li>The AI runs on the server's own computer (through Ollama). Your questions are not sent to an online AI service.</li>
-    <li>The AI assistant, quizzes and session recaps are <strong>generated text and can contain mistakes</strong>.
+    <li>By default the AI runs on the server's own computer (through Ollama), so your questions stay on that computer.
+        If the administrator switches to an <strong>online AI provider</strong>, your questions and lesson text are sent to that provider.</li>
+    <li>The AI tutor, quizzes and session recaps are <strong>generated text and can contain mistakes</strong>.
         Check important information with your textbook, instructor or tutor.</li>
+    <li>The AI tutor is designed to help you understand, with explanations, examples and hints, not to hand you answers to submit.</li>
     <li>The tutoring coordinator only <strong>prepares</strong> requests and cancellations. Nothing happens until you press Confirm,
         and it can never accept a request on a tutor's behalf.</li>
+    <li>The learning recommendations come from fixed rules over your quiz results and completed lessons. They do not read your AI conversations.</li>
     <li>Quiz scores and AI activity counts are not proof that you have mastered a topic.</li>
   </ul>
 
   <h2>What is stored</h2>
+      <li>Live session chat messages are saved with the session and can be read by the student and the tutor of that session. <strong>Video and audio go directly between your browsers</strong> and are not recorded or stored. A connection helper (a STUN server, and a TURN relay if one is configured) can see technical details such as network addresses.</li>
+      <li>Whiteboard drawings are kept only while the live room is open and are not saved afterwards. <strong>Shared files are stored on the server</strong> and can be downloaded only by the student and the tutor of that session. People who manage the server could technically access them.</li>
+      <li>By default tutors cannot see your quiz results. If you switch on <strong>Sharing with tutors</strong>, tutors you have a confirmed or completed session with can see your topic averages, lesson progress and learning goals. They never see your AI conversations or individual answers.</li>
   <ul>
-    <li>Your account (name, email, a scrambled password hash), your profile, requests, sessions, quiz attempts, feedback and notifications.</li>
-    <li>AI chats and notes you paste are <strong>not saved</strong>. Only counts (which feature, success or failure) are kept.</li>
+    <li>Your account (name, email, a scrambled password hash), your profile, requests, sessions, quiz attempts, lesson progress, feedback and notifications.</li>
+    <li>Your <strong>AI tutor conversations are saved</strong> so you can continue them. In the app only you can see them and you can delete them at any time. People who manage the database could technically read it.</li>
+    <li>Coordinator messages and notes you paste for summaries are not saved. Only counts (which feature, success or failure) are kept.</li>
     <li>Tutor student numbers are visible only to administrators. Feedback is shown without the student's name.</li>
     <li>Important administrator actions are recorded in an audit log, without passwords.</li>
   </ul>

@@ -35,5 +35,11 @@
   <article class="card"><h2>Availability</h2>
     <p>{{ summary.slots }} weekly slot{{ '' if summary.slots == 1 else 's' }}</p>
     <a class="btn btn-outline" href="{{ url_for('tutor.availability') }}">Manage availability</a></article>
+        <article class="card"><h2>My students</h2>
+      <p>Students you have confirmed sessions with.</p>
+      <a class="btn btn-outline" href="{{ url_for('people.students') }}">View students</a></article>
+    <article class="card"><h2>Profile details</h2>
+      <p>Photo, skills, education and experience.</p>
+      <a class="btn btn-outline" href="{{ url_for('people.details') }}">Edit details</a></article>
 </div>
 {% endblock %}

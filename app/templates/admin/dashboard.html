@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/charts.html" import line_chart, bar_chart, series_table, rows_table %}
 {% block title %}Admin overview – MSUEdu AI{% endblock %}
 {% block content %}
 <h1>Administrator</h1>
@@ -18,8 +19,34 @@
   <article class="card stat"><span class="stat-number">{{ stats.inactive_users }}</span> Deactivated accounts</article>
   <article class="card stat"><span class="stat-number">{{ stats.users.admin }}</span> Administrators</article>
 </div>
-<p class="note">These numbers come from the real database. Use the tabs above to review tutors, manage accounts, monitor requests and moderate feedback.</p>
+<p class="note">These numbers come from the real database. Use the tabs above to review tutors, manage accounts and the curriculum, monitor requests and moderate feedback.</p>
 {% else %}
   <div class="flash flash-error" role="alert">Could not load the statistics. Please try again.</div>
+{% endif %}
+
+<h2>Activity over the last {{ activity.days if activity else 14 }} days</h2>
+{% if activity %}
+  <p class="hint">Counts per day in Philippine time. Totals only: no names or content.</p>
+  {{ line_chart(activity.chart, 'Activity per day: tutoring requests, quiz attempts, lessons completed and AI requests') }}
+  {{ series_table(activity.names, activity.table) }}
+
+  <div class="grid chart-grid-2">
+    <article class="card">
+      <h3>Tutoring requests by subject</h3>
+      {% if subjects.requests_rows %}
+        {{ bar_chart(subjects.requests, 'Tutoring requests by subject') }}
+        {{ rows_table('Subject', subjects.requests_rows) }}
+      {% else %}<p class="empty">No requests yet.</p>{% endif %}
+    </article>
+    <article class="card">
+      <h3>Lessons completed by subject</h3>
+      {% if subjects.lessons_rows %}
+        {{ bar_chart(subjects.lessons, 'Lessons completed by subject') }}
+        {{ rows_table('Subject', subjects.lessons_rows) }}
+      {% else %}<p class="empty">No lessons completed yet.</p>{% endif %}
+    </article>
+  </div>
+{% else %}
+  <div class="flash flash-error" role="alert">The charts could not be loaded. Please try again.</div>
 {% endif %}
 {% endblock %}

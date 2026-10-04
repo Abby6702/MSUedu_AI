@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My students – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>My students</h1>
+<p><a href="{{ url_for('tutor.dashboard') }}">← Back to dashboard</a></p>
+<p class="hint">Students appear here after you accept their session request. You see only what is needed for tutoring.</p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if rows %}
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Student</th><th>Course</th><th>Completed</th><th>Upcoming</th><th>Last session</th><th><span class="sr-only">Open</span></th></tr></thead>
+    <tbody>
+    {% for s in rows %}
+      <tr>
+        <td>{{ s.full_name }}</td>
+        <td>{{ s.course or '—' }}{% if s.year_level %} · Year {{ s.year_level }}{% endif %}</td>
+        <td>{{ s.completed }}</td><td>{{ s.upcoming }}</td>
+        <td>{% if s.last_session %}{{ s.last_session|local_dt }}{% else %}—{% endif %}</td>
+        <td><a class="btn btn-small" href="{{ url_for('people.student_detail', student_id=s.id) }}">View</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif not error %}
+  <p class="empty">No students yet. Accept a session request and the student will appear here.</p>
+{% endif %}
+{% endblock %}

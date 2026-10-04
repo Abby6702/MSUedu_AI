@@ -1,5 +1,5 @@
-// Talks to OUR Flask server only. Everything from the server is inserted with
-// textContent (never innerHTML), so it cannot run code.
+// Talks to OUR Flask server only. Everything from the server is inserted as plain text,
+// so it cannot run code.
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("agent");
   if (!root) return;
@@ -170,7 +170,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("chatInput").value.trim()); }
   });
   $("chatClear").addEventListener("click", () => {
-    $("chatLog").innerHTML = '<p class="empty" id="chatEmpty">Ask for a tutor, a status update, or a cancellation to begin.</p>';
+    const empty = el("p", "empty", "Ask for a tutor, a status update, or a cancellation to begin.");
+    empty.id = "chatEmpty";
+    $("chatLog").replaceChildren(empty);
   });
   document.querySelectorAll(".example").forEach((b) =>
     b.addEventListener("click", () => { $("chatInput").value = b.textContent; $("chatInput").focus(); }));

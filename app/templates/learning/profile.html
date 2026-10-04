@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Learning profile – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>My learning profile</h1>
+<p><a href="{{ url_for('learning.index') }}">← My learning</a></p>
+<p><a class="btn btn-small btn-outline" href="{{ url_for('people.sharing') }}">Sharing with tutors</a></p>
+<p><a class="btn btn-small" href="{{ url_for('learning.recommendations') }}">My recommendations</a></p>
+<div class="flash flash-info">This profile is built from measured activity: completed lessons, quiz results and
+  sessions. <strong>It does not prove that you have mastered a topic.</strong> Strengths and weaknesses come only from
+  quizzes linked to a lesson topic, so a label based on one quiz is a hint, not a verdict.</div>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+{% if p %}
+<div class="grid">
+  <article class="card stat"><span class="stat-number">{{ p.progress_percent }}%</span> Lesson progress ({{ p.lessons_done }} of {{ p.lessons_total }})</article>
+  <article class="card stat"><span class="stat-number">{{ (p.quiz_average ~ '%') if p.quiz_average is not none else '—' }}</span> Quiz average ({{ p.quiz_attempts }} attempt{{ '' if p.quiz_attempts == 1 else 's' }})</article>
+  <article class="card stat"><span class="stat-number">{{ p.streak }}</span> Day learning streak</article>
+  <article class="card stat"><span class="stat-number">{{ p.study_minutes }}</span> Estimated study minutes (from completed lessons)</article>
+  <article class="card stat"><span class="stat-number">{{ p.sessions_completed }}</span> Completed tutoring sessions</article>
+  <article class="card stat"><span class="stat-number">{{ p.ai_questions }}</span> Questions asked in the AI assistant</article>
+</div>
+
+{% if p.topics %}
+  <div class="grid">
+    <article class="card"><h2>Strong topics</h2>
+      {% for t in p.strong %}<p>{{ t.topic_name }} <span class="meta">{{ t.average }}% average</span></p>
+      {% else %}<p class="empty">None yet.</p>{% endfor %}</article>
+    <article class="card"><h2>Developing</h2>
+      {% for t in p.developing %}<p>{{ t.topic_name }} <span class="meta">{{ t.average }}% average</span></p>
+      {% else %}<p class="empty">None.</p>{% endfor %}</article>
+    <article class="card"><h2>Needs work</h2>
+      {% for t in p.weak %}<p><a href="{{ url_for('learning.path', subject_id=t.subject_id) }}">{{ t.topic_name }}</a>
+        <span class="meta">{{ t.average }}% average, latest {{ t.latest }}%</span></p>
+      {% else %}<p class="empty">None. Nice work.</p>{% endfor %}</article>
+  </div>
+
+  <h2>Results by topic</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Topic</th><th>Subject</th><th>Quizzes</th><th>Average</th><th>Latest</th><th>Trend</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for t in p.topics %}
+        <tr>
+          <td>{{ t.topic_name }}</td><td>{{ t.subject_name }}</td><td>{{ t.attempts }}</td>
+          <td>{{ t.average }}%</td><td>{{ t.latest }}%</td><td>{{ t.trend|capitalize }}</td>
+          <td><span class="badge {{ 'badge-accepted' if t.status == 'strong' else ('badge-declined' if t.status == 'weak' else 'badge-pending') }}">{{ t.status|capitalize }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">Strong = average and latest at least 75%. Needs work = average or latest below 60%. Otherwise developing.</p>
+{% else %}
+  <p class="empty">No topic results yet. Make a quiz and choose a <em>Lesson topic</em> to see strengths and weaknesses.
+    <a href="{{ url_for('quizzes.index') }}">Go to quizzes</a></p>
+{% endif %}
+  {% if p.tutor_summaries %}
+  <h2>From your tutors</h2>
+  <p class="hint">Summaries your tutors chose to share. Each is one tutor's view of one session, and none of them proves mastery.</p>
+  {% for t in p.tutor_summaries %}
+  <article class="card">
+    <p><strong>{{ t.subject_name }}</strong> with {{ t.tutor_name }} <span class="meta">· {{ t.approved_at|local_dt }}</span></p>
+    {% if t.improvements %}<p class="preline"><strong>To work on:</strong> {{ t.improvements }}</p>{% endif %}
+    {% if t.lesson_id %}<p>Suggested next lesson: <a href="{{ url_for('learning.lesson', lesson_id=t.lesson_id) }}">{{ t.lesson_title }}</a></p>{% endif %}
+    <a class="btn btn-small btn-outline" href="{{ url_for('session_ai.student_summary', request_id=t.request_id) }}">Read the full summary</a>
+  </article>
+  {% endfor %}
+  {% endif %}
+{% endif %}
+{% endblock %}

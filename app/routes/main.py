@@ -1,4 +1,4 @@
-"""Public pages: homepage, about/privacy, and a simple health check."""
+"""Public pages: homepage, about/privacy, and health checks."""
 from flask import Blueprint, abort, current_app, jsonify, render_template
 from app.db import check_database
 
@@ -21,9 +21,15 @@ def about():
     return render_template("about.html")
 
 
+@main_bp.route("/healthz")
+def healthz():
+    """For hosting platforms and uptime monitors. It touches no database and reveals nothing."""
+    return jsonify({"status": "ok"})
+
+
 @main_bp.route("/health")
 def health():
-    """Returns JSON so you can see how the backend answers requests."""
+    """Development helper: also reports the database. Switched off in production."""
     if not current_app.config["SHOW_SYSTEM_STATUS"]:
         abort(404)
     db_ok, _ = check_database()

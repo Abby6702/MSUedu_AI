@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% macro toggle(endpoint, id_name, id, active) %}
+<form method="post" action="{{ url_for(endpoint, **{id_name: id}) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-small {{ 'btn-danger' if active else 'btn-outline' }}" type="submit">{{ 'Hide' if active else 'Show' }}</button>
+</form>
+{% endmacro %}
+{% block title %}{{ subject.name }} curriculum – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Administrator</h1>
+{% include "partials/admin_nav.html" %}
+<p><a href="{{ url_for('content.index') }}">← All subjects</a></p>
+<h2>{{ subject.name }}{% if not subject.is_active %} <span class="badge badge-declined">Subject hidden</span>{% endif %}</h2>
+<p class="hint">Hiding a topic hides all its lessons from students. Hiding a lesson hides only that lesson. Nothing is deleted and
+  progress is kept. Students see changes right away.</p>
+<p><a class="btn" href="{{ url_for('content.new_topic', subject_id=subject.id) }}">Add a topic</a></p>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% for level in levels %}
+<section class="card path-level">
+  <h3>Level {{ level.level }}</h3>
+  {% for t in level.topics %}
+  <div class="topic-block">
+    <p class="topic-head"><strong>{{ t.name }}</strong> <span class="meta">position {{ t.position }}</span>
+      {% if not t.active %}<span class="badge badge-declined">Hidden</span>{% endif %}</p>
+    <div class="review-actions">
+      <a class="btn btn-small btn-outline" href="{{ url_for('content.edit_topic', topic_id=t.id) }}">Edit topic</a>
+      <a class="btn btn-small" href="{{ url_for('content.new_lesson', topic_id=t.id) }}">Add lesson</a>
+      {{ toggle('content.toggle_topic', 'topic_id', t.id, t.active) }}
+    </div>
+    <ul class="lesson-list">
+      {% for l in t.lessons %}
+      <li>
+        {{ l.title }} <span class="meta">{{ l.difficulty|capitalize }} · {{ l.minutes }} min</span>
+        {% if not l.active %}<span class="badge badge-declined">Hidden</span>{% endif %}
+        <div class="review-actions">
+          <a class="btn btn-small btn-outline" href="{{ url_for('content.edit_lesson', lesson_id=l.id) }}">Edit</a>
+          {{ toggle('content.toggle_lesson', 'lesson_id', l.id, l.active) }}
+        </div>
+      </li>
+      {% else %}<li class="empty">No lessons yet.</li>{% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</section>
+{% else %}
+  {% if not error %}<p class="empty">This subject has no topics yet. Add the first one.</p>{% endif %}
+{% endfor %}
+{% endblock %}

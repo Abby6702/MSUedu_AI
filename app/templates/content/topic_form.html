@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if topic else 'Add' }} topic – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>{{ 'Edit topic' if topic else 'Add a topic' }}</h1>
+  <p><a href="{{ url_for('content.subject', subject_id=subject.id) }}">← {{ subject.name }}</a></p>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="name">Topic name</label>
+    <input id="name" name="name" type="text" required minlength="2" maxlength="100" value="{{ data.name }}">
+
+    <label for="level">Level</label>
+    <select id="level" name="level" required>
+      {% for n in range(1, 5) %}
+        <option value="{{ n }}" {% if data.level|string == n|string %}selected{% endif %}>Level {{ n }}</option>
+      {% endfor %}
+    </select>
+    <p class="hint">Level 1 is the first stage of the learning path, level 4 the most advanced.</p>
+
+    <label for="position">Position inside the level</label>
+    <input id="position" name="position" type="number" min="1" max="99" value="{{ data.position or '' }}">
+    <p class="hint">Lower numbers come first. {{ 'Leave empty to keep the current position.' if topic else 'Leave empty to place the topic last in its level.' }}</p>
+
+    <button class="btn" type="submit">{{ 'Save topic' if topic else 'Add topic' }}</button>
+  </form>
+</section>
+{% endblock %}

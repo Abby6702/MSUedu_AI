@@ -57,6 +57,6 @@
                  'quiz': 'Quizzes generated', 'agent': 'Coordinator messages'} %}
 {% if counts %}
   <ul>{% for key, label in labels.items() if counts.get(key) %}<li>{{ label }}: {{ counts[key] }}</li>{% endfor %}</ul>
-  <p class="hint">These are counts only. The content of your chats is not stored.</p>
+    <p class="hint">These are counts only. Your saved AI tutor conversations are private to you and can be deleted in the AI tutor page.</p>
 {% else %}<p class="empty">No AI activity yet.</p>{% endif %}
 {% endblock %}

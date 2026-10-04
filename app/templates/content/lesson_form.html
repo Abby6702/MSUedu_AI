@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if lesson else 'Add' }} lesson – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>{{ 'Edit lesson' if lesson else 'Add a lesson' }}</h1>
+  <p><a href="{{ url_for('content.subject', subject_id=topic.subject_id) }}">← {{ topic.subject_name }}</a>
+    · Topic: <strong>{{ topic.name }}</strong></p>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="title">Lesson title</label>
+    <input id="title" name="title" type="text" required minlength="3" maxlength="150" value="{{ data.title }}">
+
+    <label for="body">Lesson text</label>
+    <textarea id="body" name="body" class="code-area" rows="16" required minlength="20" maxlength="8000">{{ data.body }}</textarea>
+    <p class="hint">Students see this exactly as typed, with line breaks and spacing kept. Use blank lines between paragraphs and
+      indent code with spaces. No HTML or formatting codes are interpreted. Check facts carefully: students will rely on this.</p>
+
+    <label for="difficulty">Difficulty</label>
+    <select id="difficulty" name="difficulty">
+      {% for d in ['easy', 'medium', 'hard'] %}
+        <option value="{{ d }}" {% if data.difficulty == d %}selected{% endif %}>{{ d|capitalize }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="minutes">Reading time in minutes (1 to 120)</label>
+    <input id="minutes" name="minutes" type="number" required min="1" max="120" value="{{ data.minutes }}">
+
+    <button class="btn" type="submit">{{ 'Save lesson' if lesson else 'Add lesson' }}</button>
+  </form>
+
+  {% if lesson %}
+  <h2>Saved text, as students see it</h2>
+  <div class="lesson-body">{{ lesson.body }}</div>
+  {% if not lesson.is_active %}<p class="hint">This lesson is hidden from students.</p>{% endif %}
+  {% endif %}
+</section>
+{% endblock %}

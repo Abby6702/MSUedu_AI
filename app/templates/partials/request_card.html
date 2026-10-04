@@ -26,5 +26,24 @@
     {% endfor %}
   </div>
   {% endif %}
+    {% if r.status == 'accepted' %}
+  <div class="review-actions">
+    <a class="btn btn-small" href="{{ url_for('live.room', request_id=r.id) }}">Join live session</a>
+  </div>
+  {% endif %}
+  
+  {% if r.status == 'completed' %}
+  <div class="review-actions">
+    {% if viewer == 'student' %}
+      {% if r.has_feedback %}<span class="hint">Feedback sent. Thank you!</span>
+      {% else %}<a class="btn btn-small" href="{{ url_for('progress.feedback', request_id=r.id) }}">Leave feedback</a>{% endif %}
+      {% if r.has_record %}<a class="btn btn-small btn-outline" href="{{ url_for('progress.my_progress') }}">See tutor's notes</a>{% endif %}
+    {% else %}
+      <a class="btn btn-small" href="{{ url_for('progress.record', request_id=r.id) }}">
+      <a class="btn btn-small btn-outline" href="{{ url_for('session_ai.summary', request_id=r.id) }}">Session summary</a>
+        {{ 'Edit session record' if r.has_record else 'Record session' }}</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </article>
 {% endmacro %}

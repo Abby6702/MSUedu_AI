@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "partials/avatar.html" import avatar %}
 {% block title %}Find tutors – MSUEdu AI{% endblock %}
 {% block content %}
 <h1>Find a tutor</h1>
@@ -50,7 +51,7 @@
   <div class="grid">
     {% for t in results %}
     <article class="card">
-      <h2 class="card-title">{{ t.full_name }}</h2>
+{{ avatar(t.id, t.full_name, t.has_photo) }}<h2 class="card-title">{{ t.full_name }}</h2>
       <p class="meta">{{ t.course or 'Course not set' }}{% if t.year_level %} · Year {{ t.year_level }}{% endif %}</p>
       <p><strong>Subjects:</strong> {{ t.subject_names or 'None listed yet' }}</p>
       <p class="meta">{{ t.slot_count }} weekly slot{{ '' if t.slot_count == 1 else 's' }} ·

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Recommendations – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Recommended for you</h1>
+<p><a href="{{ url_for('learning.index') }}">← My learning</a> ·
+   <a href="{{ url_for('learning.profile') }}">Learning profile</a></p>
+<div class="flash flash-info">These come from a <strong>rule-based learning agent</strong> that reads your stored results:
+  quiz scores linked to lesson topics and lessons you completed. It does not read your AI chats, and the AI model does not
+  decide. They are suggestions, not diagnoses, and a quiz score does not prove mastery. Open <em>Why?</em> to see the numbers behind each one.</div>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+{% for r in recs %}
+<article class="card rec-card rec-{{ r.kind }}">
+  <h2 class="card-title">{{ r.title }}
+    <span class="badge {{ 'badge-declined' if r.kind == 'human_tutor' else ('badge-pending' if r.kind == 'review_lesson' else 'badge-accepted') }}">
+      {{ {'human_tutor': 'Human tutor', 'review_lesson': 'Review', 'practice': 'Practice', 'next_lesson': 'Next lesson'}[r.kind] }}</span></h2>
+  <p>{{ r.message }}</p>
+  <div class="review-actions">
+    {% if r.kind in ('review_lesson', 'next_lesson') and r.lesson_id %}
+      <a class="btn btn-small" href="{{ url_for('learning.lesson', lesson_id=r.lesson_id) }}">Open lesson</a>
+    {% elif r.kind == 'practice' %}
+      <a class="btn btn-small" href="{{ url_for('quizzes.index', subject_id=r.subject_id, topic_id=r.topic_id, difficulty=r.difficulty) }}">Practice quiz</a>
+    {% elif r.kind == 'human_tutor' %}
+      <a class="btn btn-small" href="{{ url_for('student.find_tutors', subject_id=r.subject_id) }}">Find a student tutor</a>
+    {% endif %}
+    <form method="post" action="{{ url_for('learning.dismiss_recommendation', rec_id=r.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-small btn-outline" type="submit">Hide</button>
+    </form>
+  </div>
+  <details class="agent-steps">
+    <summary>Why this recommendation? (rule {{ r.reasoning.get('rule', '') }})</summary>
+    <ul>{% for s in r.reasoning.get('steps', []) %}<li>{{ s }}</li>{% endfor %}</ul>
+  </details>
+</article>
+{% else %}
+  {% if not error %}
+  <p class="empty">No recommendations right now. Take a quiz and choose a <em>Lesson topic</em>, or complete a lesson,
+    and the agent will check your results. <a href="{{ url_for('quizzes.index') }}">Go to quizzes</a></p>
+  {% endif %}
+{% endfor %}
+
+<h2>How the agent decides</h2>
+<ol>
+  <li><strong>Review</strong> when a topic is weak or developing and its lessons are not all finished.</li>
+  <li><strong>Practice</strong> when the lessons are finished but results are still low. Difficulty follows your latest score.</li>
+  <li><strong>Human tutor</strong> when your last 3 quiz scores are below 60% even after finishing the lessons.</li>
+  <li><strong>Next lesson</strong> when no topic in a subject needs work.</li>
+</ol>
+{% endblock %}

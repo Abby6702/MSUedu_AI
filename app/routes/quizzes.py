@@ -3,12 +3,22 @@ from flask import (Blueprint, abort, current_app, flash, g, redirect,
                    render_template, request, url_for)
 from app import validators_quiz as vq
 from app.auth_utils import role_required
-from app.services import quiz_generator, quiz_service as qs, subject_service
+from app.services import (learning_service, quiz_generator, quiz_service as qs,
+                             recommendation_service, subject_service)
 
 quizzes_bp = Blueprint("quizzes", __name__, url_prefix="/student/quizzes")
 
-DEFAULT_FORM = {"subject_id": None, "topic": "", "difficulty": "medium",
+DEFAULT_FORM = {"subject_id": None, "topic_id": None, "topic": "", "difficulty": "medium",
                 "count": 5, "types": ["mcq", "tf", "short"], "mode": "practice"}
+
+
+def _topics():
+    """Lesson topics for the form. A failure here must not break quizzes."""
+    try:
+        return learning_service.list_topics()
+    except Exception:
+        current_app.logger.exception("Could not load lesson topics")
+        return []
 
 
 def _render_index(errors, data, status=200):
@@ -26,13 +36,20 @@ def _render_index(errors, data, status=200):
         quizzes = []
         errors.append("Could not load your past quizzes.")
     return render_template("quizzes/index.html", subjects=subjects, quizzes=quizzes,
-                           data=data, errors=errors, limits=(vq.MIN_QUESTIONS, vq.MAX_QUESTIONS)), status
-
+                           topics=_topics(), data=data, errors=errors,
+                           limits=(vq.MIN_QUESTIONS, vq.MAX_QUESTIONS)), status
 
 @quizzes_bp.route("/")
 @role_required("student")
 def index():
-    return _render_index([], dict(DEFAULT_FORM))
+       data = dict(DEFAULT_FORM)
+       for key in ("subject_id", "topic_id"):               # lets a recommendation pre-fill the form
+           raw = request.args.get(key, "")
+           if raw.isdigit():
+               data[key] = int(raw)
+       if request.args.get("difficulty") in vq.DIFFICULTIES:
+           data["difficulty"] = request.args["difficulty"]
+       return _render_index([], data)
 
 
 @quizzes_bp.route("/generate", methods=["POST"])
@@ -45,8 +62,9 @@ def generate():
         return _render_index(["The subject list could not be loaded. Please try again."],
                              dict(DEFAULT_FORM), 503)
     names = {s["id"]: s["name"] for s in subjects}
+    topic_map = {t["id"]: t for t in _topics()}
 
-    data, errors = vq.validate_generate_form(request.form, set(names))
+    data, errors = vq.validate_generate_form(request.form, set(names), topic_map)
     if errors:
         return _render_index(errors, data, 400)
 
@@ -85,6 +103,9 @@ def submit(quiz_id):
         current_app.logger.exception("Saving a quiz attempt failed")
         flash("Your answers could not be saved. Please try again.", "error")
         return redirect(url_for("quizzes.take", quiz_id=quiz_id))
+        
+    recommendation_service.safe_run(g.user["id"])          # the agent re-checks after a quiz
+        
     return redirect(url_for("quizzes.result", attempt_id=attempt_id))
 
 

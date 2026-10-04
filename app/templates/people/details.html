@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "partials/avatar.html" import avatar %}
+{% block title %}Profile details – MSUEdu AI{% endblock %}
+{% block content %}
+<section class="auth-card wide">
+  <h1>Profile details and photo</h1>
+  <p><a href="{{ url_for('tutor.dashboard') }}">← Back to dashboard</a> ·
+     <a href="{{ url_for('account.profile') }}">Edit basic profile</a></p>
+
+  <h2>Photo</h2>
+  <div class="tutor-head">
+    {{ avatar(g.user.id, g.user.full_name, has_photo, 'avatar-lg') }}
+    <div>
+      <form method="post" action="{{ url_for('people.upload_photo') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="photoInput">Choose a photo</label>
+        <input id="photoInput" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+        <p class="hint" id="photoNote" role="status"></p>
+        <button class="btn" type="submit">Upload photo</button>
+      </form>
+      {% if has_photo %}
+      <form method="post" action="{{ url_for('people.remove_photo') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-small btn-danger" type="submit">Remove photo</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  <p class="hint">JPEG, PNG or WebP. Your photo is checked, cropped to a square and converted, which removes hidden data
+    such as location. Students see it only after an administrator approves your profile. Use a clear photo of yourself.</p>
+
+  <h2>About your teaching</h2>
+  {% include "partials/errors.html" %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="skills">Skills (separate with commas, up to 10)</label>
+    <input id="skills" name="skills" type="text" maxlength="500" value="{{ data.skills }}"
+           placeholder="e.g. Python, Calculus, Technical writing">
+
+    <label for="education">Education</label>
+    <input id="education" name="education" type="text" maxlength="300" value="{{ data.education }}"
+           placeholder="e.g. BS Mathematics, 4th year">
+
+    <label for="experience">Experience</label>
+    <textarea id="experience" name="experience" rows="4" maxlength="1000">{{ data.experience }}</textarea>
+    <p class="hint">Only describe what is true. Students see these details on your public profile.</p>
+
+    <button class="btn" type="submit">Save details</button>
+  </form>
+</section>
+<script src="{{ url_for('static', filename='js/photo.js') }}"></script>
+{% endblock %}

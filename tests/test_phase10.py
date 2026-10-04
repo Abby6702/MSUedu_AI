@@ -16,7 +16,7 @@ from config import Config
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = {"main.home", "main.health", "main.about", "auth.login", "auth.register",
-          "auth.logout", "static"}
+          "auth.logout", "static", "main.healthz"}
 ACTION_VALUES = {"bookings.act": "accept", "admin.user_action": "activate",
                  "admin.feedback_action": "hide"}
 

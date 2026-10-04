@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Live session – MSUEdu AI{% endblock %}
+{% block content %}
+<p><a href="{{ back }}">← Back to my sessions</a></p>
+<h1>{{ req.subject_name }}: {{ req.topic }}</h1>
+<p class="meta">{{ req.start_at|local_range(req.end_at) }} · Tutor: {{ req.tutor_name }} · Student: {{ req.student_name }}</p>
+
+{% if state != 'open' %}
+  <div class="flash flash-info">{{ message }}</div>
+  {% if files %}
+  <section class="card">
+    <h2 class="card-title">Files shared in this session</h2>
+    {% for f in files %}
+      <div class="file-row">
+        <span class="file-name">{{ f.original_name }}</span>
+        <span class="meta">{{ f.size_label }} · {{ f.uploader }} · {{ f.created_at|local_dt }}</span>
+        <a class="btn btn-small btn-outline" href="{{ url_for('session_files.download', request_id=req.id, file_id=f.id) }}">Download</a>
+      </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+{% else %}
+<div id="room" data-request-id="{{ req.id }}" data-back-url="{{ back }}"
+     data-csrf="{{ csrf_token() }}" data-files-url="{{ url_for('session_files.list_files', request_id=req.id) }}">
+  <div id="roomStatus" class="flash flash-info" role="status">Connecting…</div>
+
+  <div class="room-grid">
+    <section class="video-panel" aria-label="Video">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <video id="localVideo" autoplay playsinline muted></video>
+      <p class="hint" id="mediaNote"></p>
+    </section>
+
+    <section class="card chat-panel" aria-label="Session chat">
+      <h2 class="card-title">Chat</h2>
+      <div id="roomChat" class="chat-log" role="log" aria-live="polite">
+        <p class="empty" id="roomChatEmpty">No messages yet.</p>
+      </div>
+      <label for="roomInput" class="sr-only">Message</label>
+      <input id="roomInput" type="text" maxlength="1000" placeholder="Type a message" autocomplete="off">
+      <p><button id="roomSend" type="button" class="btn btn-small">Send</button></p>
+    </section>
+  </div>
+
+  <section class="card workspace" aria-label="Shared workspace">
+    <div class="tab-buttons" role="tablist">
+      <button type="button" class="tab-btn active" id="tabBoard" role="tab" aria-selected="true"
+              aria-controls="panelBoard">Whiteboard</button>
+      <button type="button" class="tab-btn" id="tabFiles" role="tab" aria-selected="false"
+              aria-controls="panelFiles">Files</button>
+    </div>
+
+    <div id="panelBoard" role="tabpanel" aria-labelledby="tabBoard">
+      <div class="wb-tools" role="toolbar" aria-label="Whiteboard tools">
+        <button type="button" class="btn btn-small btn-outline" id="wbPen" aria-pressed="true">Pen</button>
+        <button type="button" class="btn btn-small btn-outline" id="wbEraser" aria-pressed="false">Eraser</button>
+        <button type="button" class="btn btn-small btn-outline" id="wbText" aria-pressed="false">Text</button>
+        <label for="wbColor" class="sr-only">Colour</label>
+        <input type="color" id="wbColor" value="#1d2733">
+        <label for="wbSize" class="sr-only">Brush size</label>
+        <select id="wbSize">
+          <option value="2">Thin</option>
+          <option value="5" selected>Medium</option>
+          <option value="10">Thick</option>
+          <option value="20">Extra thick</option>
+        </select>
+        <button type="button" class="btn btn-small btn-outline" id="wbUndo">Undo</button>
+        <button type="button" class="btn btn-small btn-outline" id="wbRedo">Redo</button>
+        <button type="button" class="btn btn-small btn-danger" id="wbClear">Clear board</button>
+      </div>
+      <label for="wbTextInput" class="sr-only">Text to place on the board</label>
+      <input id="wbTextInput" type="text" maxlength="200" placeholder="Text to place on the board" hidden>
+      <canvas id="wbCanvas" width="1000" height="625" aria-label="Shared whiteboard drawing area"></canvas>
+      <p class="hint" id="wbNote" role="status"></p>
+      <p class="hint">The whiteboard needs a mouse, finger or stylus. Undo and redo only affect your own drawing. The board is
+        kept while the room is open and is not saved afterwards.</p>
+    </div>
+
+    <div id="panelFiles" role="tabpanel" aria-labelledby="tabFiles" hidden>
+      <label for="fileInput">Share a file (PDF, DOCX, PPTX, JPG, PNG, WebP, GIF or TXT, up to 5 MB)</label>
+      <input id="fileInput" type="file" accept=".pdf,.docx,.pptx,.png,.jpg,.jpeg,.webp,.gif,.txt">
+      <p><button type="button" class="btn btn-small" id="fileSend">Upload</button></p>
+      <p class="hint" id="fileNote" role="status"></p>
+      <div id="fileList" aria-live="polite"><p class="empty">No files shared yet.</p></div>
+      <p class="hint">Files are checked and stored on the server. Only you and your {{ 'tutor' if g.user.role == 'student' else 'student' }}
+        can download them. Do not share private information or files you do not have the right to share.</p>
+    </div>
+  </section>
+
+       {% if g.user.role == 'tutor' %}
+     <section class="card ai-panel" id="aiPanel" hidden aria-label="AI assistant for tutors"
+              data-url="{{ url_for('session_ai.assistant', request_id=req.id) }}" data-csrf="{{ csrf_token() }}">
+       <h2 class="card-title">AI assistant for tutors</h2>
+       <p class="hint">Everything here is an AI-written <strong>draft</strong> for you to check and adapt before using it with your
+         student. It can make mistakes. Type only the topic and your own notes: do not enter the student's name or private
+         information. If the server uses an online AI provider, what you type is sent to that provider. Only you can see this panel.</p>
+       <div class="ai-actions" role="group" aria-label="What should the assistant do?">
+         <button type="button" class="btn btn-small btn-outline" data-action="exercises" aria-pressed="true">Generate exercises</button>
+         <button type="button" class="btn btn-small btn-outline" data-action="explain" aria-pressed="false">Explain topic</button>
+         <button type="button" class="btn btn-small btn-outline" data-action="quiz" aria-pressed="false">Create quiz</button>
+         <button type="button" class="btn btn-small btn-outline" data-action="hint" aria-pressed="false">Give hints</button>
+         <button type="button" class="btn btn-small btn-outline" data-action="next_lesson" aria-pressed="false">Recommend next lesson</button>
+       </div>
+
+       <div class="ai-fields">
+         <div data-for="exercises explain quiz">
+           <label for="aiTopic">Topic</label>
+           <input id="aiTopic" type="text" maxlength="100" value="{{ req.topic[:100] }}">
+         </div>
+         <div data-for="exercises explain">
+           <label for="aiLevel">Level</label>
+           <select id="aiLevel">
+             <option value="beginner">Beginner</option>
+             <option value="intermediate">Intermediate</option>
+             <option value="advanced">Advanced</option>
+           </select>
+         </div>
+         <div data-for="exercises">
+           <label for="aiCount">How many exercises (1 to 8)</label>
+           <input id="aiCount" type="number" min="1" max="8" value="5">
+           <label class="choice"><input id="aiAnswers" type="checkbox"> Include an answer key</label>
+         </div>
+         <div data-for="quiz">
+           <label for="aiQuizCount">How many questions (3 to 8)</label>
+           <input id="aiQuizCount" type="number" min="3" max="8" value="5">
+           <label for="aiDifficulty">Difficulty</label>
+           <select id="aiDifficulty">
+             <option value="easy">Easy</option>
+             <option value="medium" selected>Medium</option>
+             <option value="hard">Hard</option>
+           </select>
+           <label class="choice"><input type="checkbox" name="aiType" value="mcq" checked> Multiple choice</label>
+           <label class="choice"><input type="checkbox" name="aiType" value="tf" checked> True or false</label>
+           <label class="choice"><input type="checkbox" name="aiType" value="short" checked> Short answer</label>
+         </div>
+         <div data-for="hint">
+           <label for="aiProblem">The problem the student is stuck on (10 to 1500 characters)</label>
+           <textarea id="aiProblem" rows="4" maxlength="1500"></textarea>
+           <label for="aiAttempt">What the student has tried (optional)</label>
+           <textarea id="aiAttempt" rows="3" maxlength="1000"></textarea>
+         </div>
+         <div data-for="next_lesson">
+           <label for="aiNotes">Your notes about what the student needs (optional)</label>
+           <textarea id="aiNotes" rows="3" maxlength="1000"></textarea>
+         </div>
+       </div>
+
+       <p class="review-actions"><button type="button" class="btn" id="aiGo">Generate exercises</button></p>
+       <p class="hint" id="aiBusy" hidden>The AI is working… this can take a minute.</p>
+       <div id="aiError" class="flash flash-error" role="alert" hidden></div>
+       <div id="aiOut" aria-live="polite"></div>
+     </section>
+     {% endif %}
+  <div class="room-controls" role="toolbar" aria-label="Session controls">
+    <button id="btnMic" type="button" class="btn btn-outline" aria-pressed="false">Mute microphone</button>
+    <button id="btnCam" type="button" class="btn btn-outline" aria-pressed="false">Turn camera off</button>
+    <button id="btnScreen" type="button" class="btn btn-outline" aria-pressed="false">Share screen</button>
+    <button id="btnBoard" type="button" class="btn btn-outline">Whiteboard</button>
+    <button id="btnFiles" type="button" class="btn btn-outline">Files</button>
+           {% if g.user.role == 'tutor' %}
+       <button id="btnAi" type="button" class="btn btn-outline" aria-pressed="false">AI assistant</button>
+       <a class="btn btn-outline" href="{{ url_for('session_ai.summary', request_id=req.id) }}" target="_blank" rel="noopener">Summarize session</a>
+       {% endif %}
+    <button id="btnEnd" type="button" class="btn btn-danger">End session</button>
+  </div>
+  <p class="hint">Video and audio go directly between your browsers and are not recorded. Chat messages are saved with
+    this session and can be read by you and your {{ 'tutor' if g.user.role == 'student' else 'student' }}.
+    Screen sharing is not available on most phones.</p>
+</div>
+<script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/session.js') }}"></script>
+<script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
+<script src="{{ url_for('static', filename='js/whiteboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/session_files.js') }}"></script>
+{% if g.user.role == 'tutor' %}
+<script src="{{ url_for('static', filename='js/tutor_assistant.js') }}"></script>
+{% endif %}
+{% endif %}
+{% endblock %}

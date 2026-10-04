@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}My learning – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>My learning</h1>
+<p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a></p>
+<a class="btn" href="{{ url_for('learning.recommendations') }}">Recommendations</a>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+
+<div class="grid">
+  <article class="card stat"><span class="stat-number">{{ stats.completed }}</span> Lessons completed</article>
+  <article class="card stat"><span class="stat-number">{{ stats.streak }}</span> Day learning streak</article>
+</div>
+
+<h2>Learning paths</h2>
+{% for s in subjects %}
+<article class="card path-card">
+  <h3 class="card-title">{{ s.name }}</h3>
+  <p class="meta">{{ s.done }} of {{ s.total }} lessons · {{ s.percent }}%</p>
+  <progress max="100" value="{{ s.percent }}">{{ s.percent }}%</progress>
+  <p><a class="btn btn-small" href="{{ url_for('learning.path', subject_id=s.id) }}">{{ 'Continue' if s.done else 'Start' }}</a></p>
+</article>
+{% else %}
+  {% if not error %}<p class="empty">No lessons are available yet.</p>{% endif %}
+{% endfor %}
+<p class="hint">Your progress is counted from lessons you mark complete. It does not prove mastery of a topic.</p>
+{% endblock %}

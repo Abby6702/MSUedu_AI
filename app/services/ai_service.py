@@ -13,7 +13,7 @@ RATE_LIMIT = 20          # requests ...
 RATE_WINDOW_MIN = 10     # ... per this many minutes, per student
 
 ERROR_MESSAGES = {
-    "not_configured": "The AI model has not been set up yet. Please contact the administrator.",
+    "not_configured": "The AI service is not configured. Add the AI settings (AI_API_KEY and AI_MODEL, or OLLAMA_MODEL) to your .env file.",
     "unavailable": "The AI service is not running right now. Please try again later.",
     "model_missing": "The configured AI model is not installed on the server.",
     "timeout": "The AI took too long to answer. Try a shorter question, or try again.",
@@ -65,14 +65,14 @@ def _log_usage(user_id, feature, subject_id, success, error_code, started):
         current_app.logger.exception("Could not write AI usage log")
 
 
-def _run(user_id, feature, subject_id, messages):
+def _run(user_id, feature, subject_id, messages, temperature=0.3):
     """Returns (http_status, json_body)."""
     if _rate_limited(user_id):
         return 429, {"ok": False, "error": "You have sent a lot of requests. "
                                            "Please wait a few minutes and try again."}
     started = time.monotonic()
     try:
-        text = ollama_client.chat(messages)
+        text = ollama_client.chat(messages, temperature=temperature)
     except ollama_client.OllamaError as error:
         _log_usage(user_id, feature, subject_id, False, error.code, started)
         return (STATUS_CODES.get(error.code, 502),
