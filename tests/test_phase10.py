@@ -126,11 +126,12 @@ def test_templates_do_nothing_the_security_policy_would_block():
     problems = []
     for path in (ROOT / "app" / "templates").rglob("*.html"):
         text = path.read_text(encoding="utf-8")
+        is_email_template = path.is_relative_to(ROOT / "app" / "templates" / "emails")
         if re.search(r"<script(?![^>]*\bsrc=)", text):
             problems.append(f"{path.name}: inline <script>")
         if re.search(r"\son[a-z]+\s*=", text, re.IGNORECASE):
             problems.append(f"{path.name}: inline event handler")
-        if re.search(r"\sstyle\s*=", text, re.IGNORECASE):
+        if not is_email_template and re.search(r"\sstyle\s*=", text, re.IGNORECASE):
             problems.append(f"{path.name}: inline style attribute")
     assert problems == []
 

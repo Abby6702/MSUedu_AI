@@ -30,14 +30,17 @@
   <article class="card"><h2>Recommended for you</h2>
       {% if recs %}<ul>{% for r in recs %}<li>{{ r.title }}</li>{% endfor %}</ul>
       {% else %}<p class="empty">No recommendations yet. Take a quiz linked to a lesson topic.</p>{% endif %}
-      <a href="{{ url_for('learning.recommendations') }}">See all</a></article><h2>Suggested subjects</h2>
-    {% if suggested %}
+      <a href="{{ url_for('learning.recommendations') }}">See all</a></article>
+</div>
+
+<section class="card" aria-labelledby="suggested-subjects-heading">
+  <h2 id="suggested-subjects-heading">Suggested subjects</h2>
+  {% if suggested %}
       <ul>{% for s in suggested %}
         <li><a href="{{ url_for('student.find_tutors', subject_id=s.id) }}">{{ s.name }}</a></li>
       {% endfor %}</ul>
-    {% else %}<p class="empty">No subjects yet.</p>{% endif %}
-  </article>
-</div>
+  {% else %}<p class="empty">No subjects yet.</p>{% endif %}
+</section>
 
 <h2>Quick links</h2>
 <p class="quick-links">

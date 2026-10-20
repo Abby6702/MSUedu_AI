@@ -12,6 +12,8 @@
   --err-bg: #fdeaea;
   --err-ink: #8a1f1f;
   --radius: 12px;
+  --shadow: 0 8px 24px rgba(23, 84, 70, .055);
+  --shadow-raised: 0 14px 30px rgba(23, 84, 70, .11);
 }
 
 * { box-sizing: border-box; }
@@ -20,9 +22,18 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--ink);
-  background: var(--bg);
+  background: linear-gradient(180deg, #edf5f0 0, var(--bg) 19rem);
   line-height: 1.6;
 }
+
+h1, h2, h3 {
+  color: var(--primary-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.25;
+}
+h1 { font-size: 2rem; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.15rem; }
 
 .container { width: min(1080px, 92%); margin-inline: auto; }
 
@@ -34,16 +45,41 @@ body {
 .skip-link:focus { left: 0; }
 
 /* Header and navigation */
-.site-header { background: var(--primary); color: #fff; }
+.site-header {
+  background: linear-gradient(105deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(17, 58, 47, .16);
+}
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: .5rem; padding: .8rem 0;
 }
-.brand { color: #fff; font-weight: 700; font-size: 1.3rem; text-decoration: none; }
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.3rem;
+  text-decoration: none;
+}
+.brand-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  display: block;
+}
+.brand-text { display: inline-flex; align-items: center; }
 .brand span { color: var(--accent); }
-.site-nav { display: flex; align-items: center; gap: 1.2rem; }
-.site-nav a { color: #fff; text-decoration: none; }
-.site-nav a:hover { text-decoration: underline; }
+.site-nav { display: flex; align-items: center; gap: .35rem; }
+.site-nav a {
+  color: #fff;
+  text-decoration: none;
+  border-radius: 7px;
+  padding: .45rem .65rem;
+  transition: background-color .18s ease, color .18s ease;
+}
+.site-nav a:hover { background: rgba(255, 255, 255, .13); }
 .nav-soon { opacity: .7; cursor: not-allowed; }
 .nav-toggle {
   display: none; background: transparent; color: #fff; cursor: pointer;
@@ -55,13 +91,35 @@ body {
 .hero h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.2; margin: 0 0 .5rem; }
 .hero p { max-width: 60ch; color: var(--muted); font-size: 1.1rem; }
 
-.grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.container#main { padding-block: 1.75rem 3.25rem; animation: page-enter .45s ease-out both; }
+.grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .card {
   background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.2rem;
+  border-radius: var(--radius); padding: 1.2rem; box-shadow: var(--shadow);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 .card h3 { margin-top: 0; color: var(--primary-dark); }
 .note { color: var(--muted); font-size: .95rem; }
+main a:not(.btn) { color: var(--primary-dark); text-decoration-thickness: .08em; text-underline-offset: .18em; }
+main a:not(.btn):hover { color: var(--primary); }
+
+.grid > .card { animation: card-enter .48s ease-out both; }
+.grid > .card:nth-child(2) { animation-delay: .06s; }
+.grid > .card:nth-child(3) { animation-delay: .12s; }
+.grid > .card:nth-child(4) { animation-delay: .18s; }
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (hover: hover) {
+  .card:hover { border-color: #c5d7ce; box-shadow: var(--shadow-raised); transform: translateY(-2px); }
+}
 
 .status { padding: .8rem 1rem; border-radius: 8px; font-weight: 600; }
 .status.ok { background: var(--ok-bg); color: var(--ok-ink); }
@@ -75,7 +133,11 @@ body {
 
 /* Mobile layout */
 @media (max-width: 640px) {
+  .container#main { padding-block: 1.2rem 2.4rem; }
   .nav-toggle { display: block; }
-  .site-nav { display: none; flex-direction: column; align-items: flex-start; width: 100%; padding: .5rem 0; }
+  .site-nav { display: none; flex-direction: column; align-items: stretch; width: 100%; padding: .5rem 0; }
   .site-nav.open { display: flex; }
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.3rem; }
 }
+

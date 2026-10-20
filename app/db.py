@@ -5,6 +5,13 @@ from pymysql.cursors import DictCursor
 from flask import current_app
 
 
+#def get_connection():
+    # Read the combined service URI string directly
+#    db_url = current_app.config["DATABASE_URL"]
+    
+    # This automatically handles the host, port, user, password, and SSL parameters securely!
+#    return pymysql.from_url(db_url, cursorclass=DictCursor)
+
 def get_connection():
     cfg = current_app.config
     return pymysql.connect(
@@ -18,6 +25,7 @@ def get_connection():
         connect_timeout=5,
         # Read and write TIMESTAMP columns in UTC, whatever the server's own time zone is.
         init_command="SET time_zone = '+00:00'",
+        ssl={'ssl': True}
     )
 
 

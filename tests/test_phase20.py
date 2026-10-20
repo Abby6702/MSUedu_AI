@@ -9,6 +9,7 @@ import pytest
 
 from app import create_app, demo_data, deploy_checks as dc, ops
 from app.routes import main as main_routes
+from app.services import mail_service
 from config import Config
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,6 +43,66 @@ def project_files(*suffixes):
     for path in ROOT.rglob("*"):
         if path.is_file() and path.suffix in suffixes and not (set(path.relative_to(ROOT).parts) & SKIP_DIRS):
             yield path
+
+
+def test_booking_update_email_template_renders_escaped_content():
+    app = create_app(P20Config)
+    with app.app_context():
+        rendered = app.jinja_env.get_template("emails/booking_update.html").render(
+            title="Request accepted",
+            recipient_name="<Student>",
+            body="Your tutoring request was accepted.",
+            link="https://example.test/requests/1",
+        )
+
+    assert "Request accepted" in rendered
+    assert "&lt;Student&gt;" in rendered
+    assert "Your tutoring request was accepted." in rendered
+    assert 'href="https://example.test/requests/1"' in rendered
+    assert "View booking" in rendered
+
+
+def test_booking_update_email_uses_smtp_and_includes_html(monkeypatch):
+    class FakeSMTP:
+        message = None
+
+        def __init__(self, host, port, timeout):
+            self.host, self.port, self.timeout = host, port, timeout
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def ehlo(self):
+            pass
+
+        def starttls(self, context):
+            self.tls_context = context
+
+        def login(self, username, password):
+            self.credentials = (username, password)
+
+        def send_message(self, message):
+            FakeSMTP.message = message
+
+    monkeypatch.setattr(mail_service.smtplib, "SMTP", FakeSMTP)
+    app = create_app(P20Config)
+    app.config.update(TESTING=False, SMTP_HOST="smtp.example.test", SMTP_PORT=587,
+                      SMTP_USER="mailer@example.test", SMTP_PASS="test-secret",
+                      MAIL_BASE_URL="https://msuedu.example")
+    with app.app_context():
+        sent = mail_service.send_booking_update("student@example.test", "Student",
+                                               "Request accepted", "Your session is confirmed.",
+                                               "/student/requests")
+
+    assert sent is True
+    assert FakeSMTP.message["To"] == "student@example.test"
+    assert FakeSMTP.message["Subject"] == "Request accepted"
+    html = FakeSMTP.message.get_body(preferencelist=("html",)).get_content()
+    assert "https://msuedu.example/student/requests" in html
+    assert "Your session is confirmed." in html
 
 
 # ======================= splitting SQL =======================

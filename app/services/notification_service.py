@@ -1,6 +1,8 @@
 """In-app notifications and session reminders."""
 from datetime import timedelta
+from flask import current_app
 from app.db import execute, get_connection, query_all, query_one
+from app.services import mail_service
 from app.timeutil import format_local, format_range_local, utcnow
 
 DEFAULT_HOURS = [24, 1]
@@ -8,7 +10,8 @@ DEFAULT_HOURS = [24, 1]
 EVENT_SELECT = """
 SELECT r.id, r.student_id, r.tutor_id, r.topic, r.start_at, r.end_at,
        r.proposed_start_at, r.proposed_end_at, r.response_note,
-       s.name AS subject_name, su.full_name AS student_name, tu.full_name AS tutor_name
+    s.name AS subject_name, su.full_name AS student_name, su.email AS student_email,
+    tu.full_name AS tutor_name, tu.email AS tutor_email
 FROM tutoring_requests r
 JOIN subjects s ON s.id = r.subject_id
 JOIN users su ON su.id = r.student_id
@@ -110,7 +113,19 @@ def request_event(request_id, event, actor_id):
     if built is None:
         return False
     recipient, kind, title, body, link = built
-    return notify(recipient, kind, title, body, link, f"req:{request_id}:{event}")
+    added = notify(recipient, kind, title, body, link, f"req:{request_id}:{event}")
+    if not added:
+        return False
+
+    if recipient == row["student_id"]:
+        recipient_name, recipient_email = row["student_name"], row["student_email"]
+    else:
+        recipient_name, recipient_email = row["tutor_name"], row["tutor_email"]
+    try:
+        mail_service.send_booking_update(recipient_email, recipient_name, title, body, link)
+    except Exception:
+        current_app.logger.exception("Could not send booking update email")
+    return True
 
 
 def list_for_user(user_id, limit=50):

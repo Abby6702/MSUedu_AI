@@ -9,7 +9,7 @@ from app import create_app, timeutil
 from app import validators_progress as vp
 from app.ai import ollama_client as oc
 from app.services import ai_service
-from app.services import notification_service as ns
+from app.services import mail_service, notification_service as ns
 from app.services import progress_service as ps
 from app.services import quiz_service, tutor_service, user_service
 from app.services import request_service as rs
@@ -186,6 +186,23 @@ def test_declined_note_is_included_and_unknown_events_ignored():
     row["response_note"] = "Busy this week"
     assert "Busy this week" in ns.build_request_notification(row, "declined", 3)[3]
     assert ns.build_request_notification(row, "banana", 3) is None
+
+
+def test_request_event_emails_only_a_new_booking_notification(monkeypatch):
+    row = _session()
+    row.update(student_email="student@example.test", tutor_email="tutor@example.test")
+    sent = []
+    monkeypatch.setattr(ns, "query_one", lambda *args: row)
+    monkeypatch.setattr(ns, "notify", lambda *args: True)
+    monkeypatch.setattr(mail_service, "send_booking_update", lambda *args: sent.append(args))
+
+    assert ns.request_event(7, "accepted", 3) is True
+    assert sent[0][0:2] == ("student@example.test", "Fictional Student")
+    assert sent[0][2] == "Request accepted"
+
+    monkeypatch.setattr(ns, "notify", lambda *args: False)
+    assert ns.request_event(7, "accepted", 3) is False
+    assert len(sent) == 1
 
 
 def test_completed_notification_links_to_the_feedback_page():
