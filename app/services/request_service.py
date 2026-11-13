@@ -3,6 +3,7 @@ from datetime import timedelta
 from flask import current_app
 from app.db import get_connection, query_all, query_one
 from app.services import notification_service
+from app.services import payment_service
 from app.timeutil import to_local, utcnow
 
 MAX_OPEN_REQUESTS = 5
@@ -41,7 +42,8 @@ EVENT_BY_ACTION = {
 LIST_SQL = """
 SELECT r.id, r.student_id, r.tutor_id, r.topic, r.description, r.session_format,
        r.start_at, r.end_at, r.status, r.proposed_start_at, r.proposed_end_at,
-       r.response_note, s.name AS subject_name,
+       r.response_note, r.payment_amount, r.payment_method, r.payment_status,
+       r.payment_proof_path, s.name AS subject_name,
        su.full_name AS student_name, tu.full_name AS tutor_name,
        (SELECT COUNT(*) FROM feedback f WHERE f.request_id = r.id) AS has_feedback,
        (SELECT COUNT(*) FROM session_records sr WHERE sr.request_id = r.id) AS has_record
@@ -75,6 +77,9 @@ def available_actions(req, role):
     for (status, action) in TRANSITIONS:
         if status != req["status"] or next_status(status, action, role) is None:
             continue
+        if (action in ("accept", "accept_proposal") and req.get("payment_amount", 0) > 0
+                and req.get("payment_status") != "verified"):
+            continue
         if action == "complete" and req["end_at"] > utcnow():
             continue        # a session can only be completed after it ends
         actions.append(action)
@@ -84,8 +89,13 @@ def available_actions(req, role):
 # ---------- reading ----------
 def tutor_subject_options(tutor_id):
     return query_all(
-        "SELECT s.id, s.name FROM tutor_subjects ts JOIN subjects s ON s.id = ts.subject_id "
-        "WHERE ts.tutor_id = %s AND s.is_active = 1 ORDER BY s.name",
+        "SELECT s.id, s.name, ts.rate_30, ts.rate_60, ts.rate_90, ts.rate_120 "
+        "FROM tutor_subjects ts JOIN subjects s ON s.id = ts.subject_id "
+        "JOIN tutor_profiles tp ON tp.user_id = ts.tutor_id "
+        "WHERE ts.tutor_id = %s AND s.is_active = 1 AND ts.rate_30 > 0 AND ts.rate_60 > 0 "
+        "AND ts.rate_90 > 0 AND ts.rate_120 > 0 AND tp.payment_method IS NOT NULL "
+        "AND tp.payment_account_name IS NOT NULL AND tp.payment_account_number IS NOT NULL "
+        "ORDER BY s.name",
         (tutor_id,),
     )
 
@@ -166,14 +176,17 @@ def _check_can_confirm(cur, req, start, end):
 
 
 # ---------- writing ----------
-def create_request(student_id, tutor_id, data, dry_run=False):
+def create_request(student_id, tutor_id, data, dry_run=False, proof_data=None, proof_kind=None):
     """Returns (new_id, problem). With dry_run=True it runs every check but saves nothing."""
     conn = get_connection()
+    stored_proof = None
     try:
         with conn.cursor() as cur:
             _lock_users(cur, student_id, tutor_id)
             cur.execute(
-                "SELECT tp.tutoring_format FROM users u "
+                "SELECT tp.tutoring_format, tp.payment_method, tp.payment_account_name, "
+                "tp.payment_account_number, ts.rate_30, ts.rate_60, ts.rate_90, ts.rate_120 "
+                "FROM users u "
                 "JOIN tutor_profiles tp ON tp.user_id = u.id "
                 "JOIN tutor_subjects ts ON ts.tutor_id = u.id "
                 "JOIN subjects s ON s.id = ts.subject_id "
@@ -186,6 +199,12 @@ def create_request(student_id, tutor_id, data, dry_run=False):
                 return None, "This tutor does not teach that subject or cannot receive requests right now."
             if tutor["tutoring_format"] not in ("both", data["format"]):
                 return None, "This tutor does not offer that format."
+            duration = data["duration"]
+            if duration not in (30, 60, 90, 120) or tutor[f"rate_{duration}"] <= 0:
+                return None, "This tutor has not set a price for that session length."
+            if (not tutor["payment_method"] or not tutor["payment_account_name"]
+                    or not tutor["payment_account_number"]):
+                return None, "This tutor has not set up payment details yet."
             if not _fits_availability(cur, tutor_id, data["start"], data["end"]):
                 return None, "That time is outside the tutor's listed weekly availability."
             if _overlapping_accepted(cur, "tutor_id", tutor_id, data["start"], data["end"]):
@@ -211,18 +230,33 @@ def create_request(student_id, tutor_id, data, dry_run=False):
 
             if dry_run:
                 return None, None
+            if not proof_data or proof_kind not in payment_service.PROOF_KINDS:
+                return None, "Upload your payment proof before submitting the booking."
+            payment_amount = tutor[f"rate_{duration}"]
+            if (str(payment_amount) != str(data.get("expected_payment_amount"))
+                    or tutor["payment_method"] != data.get("expected_payment_method")
+                    or tutor["payment_account_name"] != data.get("expected_account_name")
+                    or tutor["payment_account_number"] != data.get("expected_account_number")):
+                return None, "The tutor's price or payment details changed. Review the current details before submitting."
             cur.execute(
                 "INSERT INTO tutoring_requests (student_id, tutor_id, subject_id, topic, "
-                "description, session_format, start_at, end_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                "description, session_format, start_at, end_at, payment_amount, payment_method, "
+                "payment_status) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'submitted')",
                 (student_id, tutor_id, data["subject_id"], data["topic"],
-                 data["description"] or None, data["format"], data["start"], data["end"]),
+                 data["description"] or None, data["format"], data["start"], data["end"],
+                 payment_amount, tutor["payment_method"]),
             )
             new_id = cur.lastrowid
+            stored_proof = payment_service.store_proof(proof_kind, proof_data)
+            cur.execute("UPDATE tutoring_requests SET payment_proof_path = %s WHERE id = %s",
+                        (stored_proof, new_id))
         conn.commit()
         _notify("created", new_id, student_id)
         return new_id, None
     except Exception:
         conn.rollback()
+        if stored_proof:
+            payment_service.remove_proof(stored_proof)
         raise
     finally:
         conn.close()
@@ -243,6 +277,8 @@ def perform_action(request_id, actor_id, action, note=None):
                 return False, "That action is not possible for this request right now."
 
             if action in ("accept", "accept_proposal"):
+                if req["payment_amount"] > 0 and req["payment_status"] != "verified":
+                    return False, "The tutor must verify the payment proof before this booking can be confirmed."
                 if action == "accept":
                     start, end = req["start_at"], req["end_at"]
                 else:
@@ -271,6 +307,66 @@ def perform_action(request_id, actor_id, action, note=None):
         return True, MESSAGES[action]
     except Exception:
         conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def update_payment_status(request_id, tutor_id, status):
+    """Tutor verifies or rejects the proof attached to a pending payment."""
+    if status not in ("verified", "rejected"):
+        raise ValueError("Unsupported payment status.")
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            updated = cur.execute(
+                "UPDATE tutoring_requests SET payment_status = %s "
+                "WHERE id = %s AND tutor_id = %s AND payment_amount > 0 "
+                "AND payment_status = 'submitted' AND status IN ('pending','reschedule_proposed')",
+                (status, request_id, tutor_id),
+            )
+        conn.commit()
+        if updated:
+            return True, "Payment proof verified." if status == "verified" else "Payment proof rejected."
+        return False, "That payment proof is no longer awaiting review."
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def replace_payment_proof(request_id, student_id, proof_data, proof_kind):
+    """Replace rejected proof while keeping it private and tied to the same booking."""
+    conn = get_connection()
+    stored_proof = None
+    old_proof = None
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT payment_proof_path FROM tutoring_requests WHERE id = %s AND student_id = %s "
+                "AND payment_status = 'rejected' AND status IN ('pending','reschedule_proposed') "
+                "FOR UPDATE",
+                (request_id, student_id),
+            )
+            req = cur.fetchone()
+            if req is None:
+                return False, "This booking is not awaiting replacement payment proof."
+            old_proof = req["payment_proof_path"]
+            stored_proof = payment_service.store_proof(proof_kind, proof_data)
+            cur.execute(
+                "UPDATE tutoring_requests SET payment_proof_path = %s, payment_status = 'submitted' "
+                "WHERE id = %s AND student_id = %s",
+                (stored_proof, request_id, student_id),
+            )
+        conn.commit()
+        if old_proof:
+            payment_service.remove_proof(old_proof)
+        return True, "New payment proof submitted for tutor review."
+    except Exception:
+        conn.rollback()
+        if stored_proof:
+            payment_service.remove_proof(stored_proof)
         raise
     finally:
         conn.close()

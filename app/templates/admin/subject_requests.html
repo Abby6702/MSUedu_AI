@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Tutor subject requests – MSUEdu AI{% endblock %}
+{% block content %}
+<h1>Tutor subject requests</h1>
+{% include "partials/admin_nav.html" %}
+
+<nav class="tabs" aria-label="Subject request status">
+  {% for value, label in [('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')] %}
+    <a href="{{ url_for('admin.subject_requests', status=value) }}"
+       class="{{ 'active' if status == value else '' }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}
+{% if rows %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Subject</th><th>Category</th><th>Tutor</th><th>Topics</th>
+          <th>Rates</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr>
+      </thead>
+      <tbody>
+      {% for item in rows %}
+        <tr>
+          <td>{{ item.subject_name }}</td>
+          <td>{{ item.category or '—' }}</td>
+          <td>{{ item.tutor_name }}</td>
+          <td>{{ item.topics or '—' }}</td>
+          <td>₱{{ item.rate_30 }} / 30 min<br>₱{{ item.rate_60 }} / 60 min<br>
+            ₱{{ item.rate_90 }} / 90 min<br>₱{{ item.rate_120 }} / 120 min</td>
+          <td>{{ item.status|capitalize }}</td>
+          <td>
+            {% if item.status == 'pending' %}
+              <div class="review-actions">
+                <form method="post"
+                      action="{{ url_for('admin.review_subject_request', request_id=item.id, decision='approve') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-small" type="submit">Approve</button>
+                </form>
+                <form method="post"
+                      action="{{ url_for('admin.review_subject_request', request_id=item.id, decision='reject') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-small btn-danger" type="submit">Reject</button>
+                </form>
+              </div>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="empty">No {{ status }} subject requests.</p>
+{% endif %}
+{% endblock %}

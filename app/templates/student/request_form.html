@@ -5,13 +5,20 @@
 <section class="auth-card wide">
   {% if review %}
     <h1>Review your request</h1>
-    <p>Nothing is sent until you press <strong>Confirm</strong>.</p>
+    <p>Pay the tutor using the details below, attach your receipt, then submit the booking for review.</p>
+    {% include "partials/errors.html" %}
     <div class="card">
       <p><strong>Tutor:</strong> {{ tutor.full_name }}</p>
       <p><strong>Subject:</strong> {{ subject_name }}</p>
       <p><strong>Topic:</strong> {{ data.topic }}</p>
       <p><strong>When:</strong> {{ data.start|local_range(data.end) }}</p>
       <p><strong>Format:</strong> {{ 'Online' if data.format == 'online' else 'In person' }}</p>
+      <p><strong>Amount to pay:</strong>
+        {% if quote %}₱{{ quote }}{% else %}Price unavailable — please contact the tutor.{% endif %}</p>
+      <p><strong>Payment method:</strong>
+        {{ {'gcash': 'GCash', 'maya': 'Maya', 'bank_transfer': 'Bank transfer'}.get(tutor.payment_method, 'Not set') }}</p>
+      <p><strong>Account name:</strong> {{ tutor.payment_account_name or 'Not set' }}</p>
+      <p><strong>Account number / handle:</strong> {{ tutor.payment_account_number or 'Not set' }}</p>
       {% if data.description %}<p class="preline"><strong>Details:</strong> {{ data.description }}</p>{% endif %}
     </div>
     {% macro hidden_fields() %}
@@ -23,11 +30,18 @@
       <input type="hidden" name="date" value="{{ data.date }}">
       <input type="hidden" name="time" value="{{ data.time }}">
       <input type="hidden" name="duration" value="{{ data.duration }}">
+      <input type="hidden" name="expected_payment_amount" value="{{ quote or '' }}">
+      <input type="hidden" name="expected_payment_method" value="{{ tutor.payment_method or '' }}">
+      <input type="hidden" name="expected_account_name" value="{{ tutor.payment_account_name or '' }}">
+      <input type="hidden" name="expected_account_number" value="{{ tutor.payment_account_number or '' }}">
     {% endmacro %}
     <div class="review-actions">
-      <form method="post">{{ hidden_fields() }}
+      <form method="post" enctype="multipart/form-data">{{ hidden_fields() }}
         <input type="hidden" name="step" value="confirm">
-        <button class="btn" type="submit">Confirm and send request</button></form>
+        <label for="payment_proof">Payment proof (PDF, JPG, PNG or WebP; up to 5 MB)</label>
+        <input id="payment_proof" name="payment_proof" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"
+               required>
+        <button class="btn" type="submit" {% if not quote %}disabled{% endif %}>Submit booking with payment proof</button></form>
       <form method="post">{{ hidden_fields() }}
         <input type="hidden" name="step" value="edit">
         <button class="btn btn-outline" type="submit">Change details</button></form>
@@ -38,6 +52,9 @@
     <p class="hint">Times are Philippine time. The tutor's weekly availability:
       {% for a in tutor.availability %}{{ a.day_name }} {{ a.label }}{{ '; ' if not loop.last }}{% else %}none listed{% endfor %}.</p>
     {% include "partials/errors.html" %}
+    {% if not options %}
+      <p class="empty">This tutor has not set up prices and payment details for bookings yet.</p>
+    {% else %}
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="step" value="review">
@@ -46,7 +63,9 @@
       <select id="subject_id" name="subject_id" required>
         <option value="">Select…</option>
         {% for o in options %}
-          <option value="{{ o.id }}" {% if data.get('subject_id')|string == o.id|string %}selected{% endif %}>{{ o.name }}</option>
+          <option value="{{ o.id }}" {% if data.get('subject_id')|string == o.id|string %}selected{% endif %}>
+            {{ o.name }} — ₱{{ o.rate_30 }} / 30 min, ₱{{ o.rate_60 }} / 60 min,
+            ₱{{ o.rate_90 }} / 90 min, ₱{{ o.rate_120 }} / 120 min</option>
         {% endfor %}
       </select>
 
@@ -82,6 +101,7 @@
 
       <button class="btn" type="submit">Review request</button>
     </form>
+    {% endif %}
   {% endif %}
 </section>
 {% endblock %}

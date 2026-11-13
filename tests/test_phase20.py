@@ -150,7 +150,7 @@ def test_the_schema_files_create_exactly_the_expected_tables():
         match = re.match(r"CREATE TABLE IF NOT EXISTS (\w+)", statement)
         if match:
             created.add(match.group(1))
-    assert created == set(dc.EXPECTED_TABLES) and len(dc.EXPECTED_TABLES) == 30
+    assert created == set(dc.EXPECTED_TABLES) and len(dc.EXPECTED_TABLES) == 31
     statements = all_statements()
     for table, column in dc.EXPECTED_COLUMNS:
         assert any(table in s and column in s for s in statements), f"{table}.{column} is not in any schema file"
@@ -293,7 +293,8 @@ def test_socket_origins_parsing():
 
 
 # ======================= security review =======================
-ACTION_VALUES = {"bookings.act": "accept", "admin.user_action": "activate", "admin.feedback_action": "hide"}
+ACTION_VALUES = {"bookings.act": "accept", "admin.user_action": "activate",
+                 "admin.feedback_action": "hide", "admin.review_subject_request": "approve"}
 
 
 def test_every_post_route_refuses_a_missing_csrf_token():
@@ -304,7 +305,8 @@ def test_every_post_route_refuses_a_missing_csrf_token():
     for rule in app.url_map.iter_rules():
         if "POST" not in rule.methods or rule.rule.startswith("/socket.io"):
             continue
-        values = {arg: (ACTION_VALUES[rule.endpoint] if arg == "action" else 1) for arg in rule.arguments}
+        values = {arg: (ACTION_VALUES[rule.endpoint] if arg in ("action", "decision") else 1)
+                  for arg in rule.arguments}
         url = adapter.build(rule.endpoint, values)
         response = client.post(url)
         assert response.status_code == 400, f"POST {url} ({rule.endpoint}) works without a CSRF token"

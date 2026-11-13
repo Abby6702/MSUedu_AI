@@ -47,24 +47,33 @@ def get_format(tutor_id):
 
 def get_tutor_subjects(tutor_id):
     return query_all(
-        "SELECT ts.subject_id, s.name, ts.topics FROM tutor_subjects ts "
+        "SELECT ts.subject_id, s.name, ts.topics, ts.rate_30, ts.rate_60, "
+        "ts.rate_90, ts.rate_120 FROM tutor_subjects ts "
         "JOIN subjects s ON s.id = ts.subject_id WHERE ts.tutor_id = %s ORDER BY s.name",
         (tutor_id,),
     )
 
 
-def save_teaching_setup(tutor_id, tutoring_format, selections):
-    """Replace the tutor's subject list and format in ONE transaction."""
+def save_teaching_setup(tutor_id, tutoring_format, selections, rates, payment):
+    """Replace the tutor's teaching and payment setup in ONE transaction."""
     conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute("UPDATE tutor_profiles SET tutoring_format = %s WHERE user_id = %s",
                         (tutoring_format, tutor_id))
+            cur.execute(
+                "UPDATE tutor_profiles SET payment_method = %s, payment_account_name = %s, "
+                "payment_account_number = %s WHERE user_id = %s",
+                (payment["method"], payment["account_name"], payment["account_number"], tutor_id),
+            )
             cur.execute("DELETE FROM tutor_subjects WHERE tutor_id = %s", (tutor_id,))
             for subject_id, topics in selections:
                 cur.execute(
-                    "INSERT INTO tutor_subjects (tutor_id, subject_id, topics) VALUES (%s, %s, %s)",
-                    (tutor_id, subject_id, topics or None),
+                    "INSERT INTO tutor_subjects (tutor_id, subject_id, topics, rate_30, rate_60, "
+                    "rate_90, rate_120) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    (tutor_id, subject_id, topics or None,
+                     rates[subject_id][30], rates[subject_id][60],
+                     rates[subject_id][90], rates[subject_id][120]),
                 )
         conn.commit()
     except Exception:
@@ -187,7 +196,8 @@ def get_public_tutor(tutor_id):
     Returns None unless the tutor is approved and active."""
     tutor = query_one(
         "SELECT u.id, u.full_name, tp.course, tp.year_level, tp.bio, tp.tutoring_format, "
-        "tp.skills, tp.education, tp.experience, (tp.photo_filename IS NOT NULL) AS has_photo "
+        "tp.skills, tp.education, tp.experience, tp.payment_method, tp.payment_account_name, "
+        "tp.payment_account_number, (tp.photo_filename IS NOT NULL) AS has_photo "
         "FROM users u JOIN tutor_profiles tp ON tp.user_id = u.id "
         "WHERE u.id = %s AND u.role = 'tutor' AND u.is_active = 1 "
         "AND tp.approval_status = 'approved'",
@@ -196,7 +206,8 @@ def get_public_tutor(tutor_id):
     if tutor is None:
         return None
     tutor["subjects"] = query_all(
-        "SELECT s.name, ts.topics FROM tutor_subjects ts JOIN subjects s ON s.id = ts.subject_id "
+        "SELECT s.name, ts.topics, ts.rate_30, ts.rate_60, ts.rate_90, ts.rate_120 "
+        "FROM tutor_subjects ts JOIN subjects s ON s.id = ts.subject_id "
         "WHERE ts.tutor_id = %s AND s.is_active = 1 ORDER BY s.name",
         (tutor_id,),
     )

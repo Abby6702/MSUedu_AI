@@ -27,13 +27,96 @@
           <input type="text" name="topics_{{ s.id }}" maxlength="255"
                  placeholder="Topics you can help with (optional)"
                  aria-label="Topics for {{ s.name }}" value="{{ chosen.get(s.id, '') }}">
+          <div class="rate-fields">
+            {% for duration in rate_durations %}
+              <div class="rate-row">
+                <label for="rate_{{ duration }}_{{ s.id }}">{{ duration }} minutes (₱)</label>
+                <input id="rate_{{ duration }}_{{ s.id }}" name="rate_{{ duration }}_{{ s.id }}"
+                       type="number" min="1" max="100000" step="1"
+                       value="{{ chosen_rates.get(s.id, {}).get(duration, '') }}"
+                       aria-label="{{ duration }} minute rate for {{ s.name }}">
+              </div>
+            {% endfor %}
+          </div>
         </div>
       {% else %}
         <p class="empty">No subjects exist yet. Ask an administrator to add some.</p>
       {% endfor %}
     </fieldset>
 
+    <fieldset>
+      <legend>Payment details</legend>
+      <p class="hint">Students will use these details to pay before submitting a booking.</p>
+      <label for="payment_method">Payment method</label>
+      <select id="payment_method" name="payment_method" required>
+        <option value="">Choose…</option>
+        <option value="gcash" {% if payment.method == 'gcash' %}selected{% endif %}>GCash</option>
+        <option value="maya" {% if payment.method == 'maya' %}selected{% endif %}>Maya</option>
+        <option value="bank_transfer" {% if payment.method == 'bank_transfer' %}selected{% endif %}>Bank transfer</option>
+      </select>
+      <label for="payment_account_name">Account name</label>
+      <input id="payment_account_name" name="payment_account_name" required maxlength="100"
+             value="{{ payment.account_name or '' }}">
+      <label for="payment_account_number">Account number or payment handle</label>
+      <input id="payment_account_number" name="payment_account_number" required maxlength="50"
+             value="{{ payment.account_number or '' }}">
+    </fieldset>
+
     <button class="btn" type="submit">Save</button>
   </form>
+
+  <h2>Request a new subject</h2>
+  <p class="hint">A system administrator must approve your subject before it is added to your teaching subjects.</p>
+  {% if request_errors %}
+    <div class="flash flash-error" role="alert">
+      <ul>{% for error in request_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+  <form method="post" action="{{ url_for('tutor.request_subject') }}" class="card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="subject_name">Subject name</label>
+    <input id="subject_name" name="subject_name" required minlength="2" maxlength="100"
+           value="{{ request_data.get('subject_name', '') }}">
+    <label for="subject_category">Category (optional)</label>
+    <input id="subject_category" name="subject_category" maxlength="60"
+           value="{{ request_data.get('subject_category', '') }}">
+    <label for="subject_topics">Topics you can teach (optional)</label>
+    <input id="subject_topics" name="subject_topics" maxlength="255"
+           value="{{ request_data.get('subject_topics', '') }}">
+    <fieldset>
+      <legend>Session rates (₱)</legend>
+      <div class="rate-fields">
+        {% for duration in rate_durations %}
+          <div class="rate-row">
+            <label for="new_rate_{{ duration }}">{{ duration }} minutes</label>
+            <input id="new_rate_{{ duration }}" name="new_rate_{{ duration }}" type="number"
+                   min="1" max="100000" step="1" required
+                   value="{{ request_data.get('new_rate_' ~ duration, '') }}">
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+    <button class="btn" type="submit">Submit subject for approval</button>
+  </form>
+
+  <h2>My subject requests</h2>
+  {% if subject_requests %}
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Subject</th><th>Category</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for item in subject_requests %}
+          <tr>
+            <td>{{ item.subject_name }}</td>
+            <td>{{ item.category or '—' }}</td>
+            <td>{{ item.status|capitalize }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty">You have not requested any new subjects.</p>
+  {% endif %}
 </section>
 {% endblock %}

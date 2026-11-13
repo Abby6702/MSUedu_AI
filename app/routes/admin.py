@@ -188,6 +188,39 @@ def toggle_subject(subject_id):
     return redirect(url_for("admin.subjects"))
 
 
+@admin_bp.route("/subject-requests")
+@role_required("admin")
+def subject_requests():
+    status = request.args.get("status", "pending")
+    if status not in ("pending", "approved", "rejected"):
+        status = "pending"
+    try:
+        rows = subject_service.list_subject_requests(status)
+        error = None
+    except Exception:
+        current_app.logger.exception("Could not load tutor subject requests")
+        rows, error = [], "Could not load subject requests. Please try again."
+    return render_template("admin/subject_requests.html", rows=rows, status=status, error=error)
+
+
+@admin_bp.route("/subject-requests/<int:request_id>/<any(approve,reject):decision>",
+                methods=["POST"])
+@role_required("admin")
+def review_subject_request(request_id, decision):
+    status = "approved" if decision == "approve" else "rejected"
+    try:
+        changed = subject_service.review_subject_request(request_id, g.user["id"], status)
+        if changed:
+            _audit(f"tutor_subject_{status}", "tutor_subject_request", request_id)
+            flash("Subject request " + status + ".", "success")
+        else:
+            flash("That subject request is no longer pending.", "error")
+    except Exception:
+        current_app.logger.exception("Reviewing tutor subject request failed")
+        flash("Could not save the subject decision. Please try again.", "error")
+    return redirect(url_for("admin.subject_requests"))
+
+
 # ---------- monitoring ----------
 @admin_bp.route("/requests")
 @role_required("admin")

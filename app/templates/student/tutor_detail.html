@@ -26,9 +26,18 @@
   <h2>Subjects</h2>
   {% if tutor.subjects %}
     <ul>{% for s in tutor.subjects %}
-      <li><strong>{{ s.name }}</strong>{% if s.topics %} – {{ s.topics }}{% endif %}</li>
+      <li><strong>{{ s.name }}</strong>{% if s.topics %} – {{ s.topics }}{% endif %}
+        {% if s.rate_30 and s.rate_60 and s.rate_90 and s.rate_120 %}
+          <br><span class="hint">₱{{ s.rate_30 }} / 30 min · ₱{{ s.rate_60 }} / 1 hour ·
+          ₱{{ s.rate_90 }} / 90 min · ₱{{ s.rate_120 }} / 2 hours</span>
+        {% else %}<br><span class="hint">Pricing not set for this subject.</span>{% endif %}
+      </li>
     {% endfor %}</ul>
   {% else %}<p class="empty">No subjects listed.</p>{% endif %}
+  {% if tutor.payment_method %}
+    <p><strong>Accepts payment by:</strong>
+      {{ {'gcash': 'GCash', 'maya': 'Maya', 'bank_transfer': 'Bank transfer'}.get(tutor.payment_method, tutor.payment_method) }}</p>
+  {% endif %}
 
   <h2>Weekly availability</h2>
   {% if tutor.availability %}
@@ -50,7 +59,7 @@
     <p class="empty">No feedback yet.</p>
   {% endif %}
 
-  {% if tutor.subjects and tutor.availability %}
+  {% if tutor.subjects and tutor.availability and tutor.payment_method %}
     <p><a class="btn" href="{{ url_for('bookings.new_request', tutor_id=tutor.id) }}">Request a session</a></p>
   {% else %}
     <p class="empty">This tutor cannot receive requests until they list subjects and availability.</p>

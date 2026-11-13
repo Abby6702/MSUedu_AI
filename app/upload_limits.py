@@ -7,7 +7,8 @@ import re
 from flask import Request
 
 FILE_BODY_LIMIT = 5 * 1024 * 1024 + 256 * 1024      # the biggest allowed file plus form overhead
-UPLOAD_PATH = re.compile(r"^/sessions/\d+/files$")
+UPLOAD_PATH = re.compile(
+    r"^(?:/sessions/\d+/files|/student/tutors/\d+/request|/requests/\d+/payment-proof)$")
 
 
 class AppRequest(Request):

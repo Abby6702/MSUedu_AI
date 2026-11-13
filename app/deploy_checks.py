@@ -7,12 +7,19 @@ EXPECTED_TABLES = (
     "notification_preferences", "notifications", "platform_settings", "quiz_answers", "quiz_attempts",
     "quiz_questions", "quizzes", "recommendations", "session_files", "session_messages",
     "session_records", "session_summaries", "student_profiles", "subjects", "topics",
-    "tutor_availability", "tutor_profiles", "tutor_subjects", "tutoring_requests", "users")
+    "tutor_availability", "tutor_profiles", "tutor_subject_requests", "tutor_subjects",
+    "tutoring_requests", "users")
 
 # Columns added later with ALTER TABLE: if the tables exist but these do not, a script was skipped.
 EXPECTED_COLUMNS = (
     ("users", "must_change_password"), ("users", "session_version"),
     ("tutor_profiles", "tutoring_format"), ("tutor_profiles", "skills"), ("tutor_profiles", "photo_filename"),
+    ("tutor_profiles", "payment_method"), ("tutor_profiles", "payment_account_name"),
+    ("tutor_profiles", "payment_account_number"),
+    ("tutor_subjects", "rate_30"), ("tutor_subjects", "rate_60"),
+    ("tutor_subjects", "rate_90"), ("tutor_subjects", "rate_120"),
+    ("tutoring_requests", "payment_amount"), ("tutoring_requests", "payment_method"),
+    ("tutoring_requests", "payment_status"), ("tutoring_requests", "payment_proof_path"),
     ("student_profiles", "share_progress_with_tutors"), ("quizzes", "topic_id"))
 
 # MySQL errors that only mean "this change is already in place":

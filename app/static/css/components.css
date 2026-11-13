@@ -82,6 +82,10 @@ legend { font-weight: 600; padding: 0 .4rem; }
 
 .subject-row { display: grid; gap: .3rem; margin-top: .8rem; }
 .subject-row input[type="text"] { margin-top: 0; }
+.rate-fields { display: grid; gap: .5rem; }
+.rate-row { display: grid; grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 2fr); gap: .6rem; align-items: center; }
+.rate-row label { font-size: .9rem; margin-top: 0; }
+.rate-row input { margin-top: 0; }
 
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; background: var(--card); }

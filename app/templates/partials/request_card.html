@@ -8,6 +8,37 @@
   <p class="meta">
     {% if viewer == 'student' %}Tutor: {{ r.tutor_name }}{% else %}Student: {{ r.student_name }}{% endif %}
     · {{ 'Online' if r.session_format == 'online' else 'In person' }}</p>
+  {% if r.payment_amount %}
+    <p><strong>Payment:</strong> ₱{{ r.payment_amount }} ·
+      {{ {'gcash': 'GCash', 'maya': 'Maya', 'bank_transfer': 'Bank transfer'}.get(r.payment_method, 'Unknown method') }}
+      · {{ {'submitted': 'Proof submitted', 'verified': 'Verified', 'rejected': 'Rejected',
+             'unpaid': 'Not recorded'}.get(r.payment_status, r.payment_status) }}</p>
+    {% if r.payment_proof_path %}
+      <p><a class="btn btn-small btn-outline"
+            href="{{ url_for('bookings.payment_proof', request_id=r.id) }}">View payment proof</a></p>
+    {% endif %}
+    {% if viewer == 'tutor' and r.payment_status == 'submitted' %}
+      <div class="review-actions">
+        <form method="post" action="{{ url_for('bookings.verify_payment', request_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-small" type="submit">Verify payment</button>
+        </form>
+        <form method="post" action="{{ url_for('bookings.reject_payment', request_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-small btn-danger" type="submit">Reject proof</button>
+        </form>
+      </div>
+    {% elif viewer == 'student' and r.payment_status == 'rejected' %}
+      <form method="post" enctype="multipart/form-data"
+            action="{{ url_for('bookings.replace_payment_proof', request_id=r.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="payment_proof_{{ r.id }}">Upload corrected proof</label>
+        <input id="payment_proof_{{ r.id }}" name="payment_proof" type="file"
+               accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+        <button class="btn btn-small" type="submit">Resubmit proof</button>
+      </form>
+    {% endif %}
+  {% endif %}
   <p><strong>When:</strong> {{ r.start_at|local_range(r.end_at) }}</p>
   {% if r.status == 'reschedule_proposed' %}
     <p class="proposal"><strong>Proposed new time:</strong> {{ r.proposed_start_at|local_range(r.proposed_end_at) }}</p>

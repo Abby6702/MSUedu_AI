@@ -3,6 +3,7 @@
 {% block content %}
 <h1>Manage subjects</h1>
 <p><a href="{{ url_for('admin.dashboard') }}">← Back to dashboard</a></p>
+{% include "partials/admin_nav.html" %}
 
 {% include "partials/errors.html" %}
 <form method="post" class="inline-form card">

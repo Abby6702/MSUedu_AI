@@ -1,6 +1,6 @@
 """Creates and configures the Flask application (the 'app factory')."""
 import click
-from flask import Flask, abort, flash, g, redirect, render_template, request, session, url_for
+from flask import Flask, abort, app, app, flash, g, redirect, render_template, request, session, url_for
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from config import Config
 

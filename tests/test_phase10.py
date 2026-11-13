@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = {"main.home", "main.health", "main.about", "auth.login", "auth.register",
           "auth.logout", "static", "main.healthz"}
 ACTION_VALUES = {"bookings.act": "accept", "admin.user_action": "activate",
-                 "admin.feedback_action": "hide"}
+                 "admin.feedback_action": "hide", "admin.review_subject_request": "approve"}
 
 
 class P10Config(Config):
@@ -55,7 +55,7 @@ def all_routes(app):
             continue
         values = {}
         for arg in rule.arguments:
-            values[arg] = ACTION_VALUES[rule.endpoint] if arg == "action" else 1
+            values[arg] = ACTION_VALUES[rule.endpoint] if arg in ("action", "decision") else 1
         url = adapter.build(rule.endpoint, values)
         for method in sorted(rule.methods & {"GET", "POST"}):
             found.append((rule.endpoint, method, url))

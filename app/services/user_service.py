@@ -38,7 +38,8 @@ def get_profile(user_id, role):
         )
     if role == "tutor":
         return query_one(
-            "SELECT student_number, course, year_level, bio, approval_status "
+            "SELECT student_number, course, year_level, bio, approval_status, payment_method, "
+            "payment_account_name, payment_account_number "
             "FROM tutor_profiles WHERE user_id = %s",
             (user_id,),
         )
