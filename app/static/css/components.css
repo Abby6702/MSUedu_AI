@@ -5,7 +5,7 @@
   text-decoration: none; cursor: pointer;
   transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
-.btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); box-shadow: 0 5px 14px rgba(23, 84, 70, .2); }
+.btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); box-shadow: 0 5px 14px rgba(92, 11, 34, .2); }
 @media (hover: hover) {
   .btn:hover { transform: translateY(-1px); }
 }
@@ -39,7 +39,7 @@ form select, form textarea {
   transition: border-color .18s ease, box-shadow .18s ease;
 }
 form input:focus, form select:focus, form textarea:focus {
-  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(31, 111, 92, .15); outline: none;
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(123, 16, 48, .15); outline: none;
 }
 form button.btn { margin-top: 1.2rem; }
 fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0 0; padding: .5rem 1rem 1rem; }
@@ -163,7 +163,7 @@ th { background: #eef3f1; }
 .feedback-quote p { margin: .2rem 0; }
 
 /* ---- Phase 9 additions ---- */
-.announcement { background: #fff3d6; color: #5c4100; border-bottom: 1px solid #f0d08a;
+.announcement { background: var(--accent-soft); color: #5c4100; border-bottom: 1px solid #edd17b;
                 padding: .5rem 0; font-weight: 600; }
 .temp-password { display: inline-block; font-size: 1.5rem; letter-spacing: .08em;
                  padding: .5rem 1rem; background: #f1f5f3; border: 2px dashed var(--primary);
@@ -250,7 +250,7 @@ progress { width: 100%; height: 1rem; accent-color: var(--primary); }
 .tutor-head { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: .5rem; }
 .tutor-head h1 { margin: 0; }
 .skill-tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-.skill-tags li { background: #e3f4ec; color: #14523b; padding: .15rem .7rem; border-radius: 999px; font-size: .9rem; }
+.skill-tags li { background: var(--ok-bg); color: var(--ok-ink); padding: .15rem .7rem; border-radius: 999px; font-size: .9rem; }
 
 /* ---- Phase 16 additions ---- */
 .room-grid { display: grid; gap: 1rem; grid-template-columns: 2fr 1fr; align-items: start; }
@@ -299,21 +299,21 @@ progress { width: 100%; height: 1rem; accent-color: var(--primary); }
 .chart-axis, .chart-label, .chart-value { font: 12px system-ui, "Segoe UI", sans-serif; fill: #5b6673; }
 .chart-label { fill: #1d2733; }
 .chart-value { font-weight: 700; fill: #1d2733; }
-.chart-bar { fill: #1f6f5c; }
+.chart-bar { fill: var(--primary); }
 .chart-line { stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
-.chart-line.s1, .chart-dot.s1 { stroke: #1f6f5c; }
-.chart-line.s2, .chart-dot.s2 { stroke: #b97a00; }
-.chart-line.s3, .chart-dot.s3 { stroke: #2b5fa8; }
+.chart-line.s1, .chart-dot.s1 { stroke: var(--primary); }
+.chart-line.s2, .chart-dot.s2 { stroke: var(--accent); }
+.chart-line.s3, .chart-dot.s3 { stroke: var(--secondary); }
 .chart-line.s4, .chart-dot.s4 { stroke: #b4501a; }
 .chart-line.s3 { stroke-dasharray: 7 4; }
 .chart-line.s4 { stroke-dasharray: 2 4; }
 .chart-dot { stroke: none; }
-.chart-dot.s1 { fill: #1f6f5c; } .chart-dot.s2 { fill: #b97a00; }
-.chart-dot.s3 { fill: #2b5fa8; } .chart-dot.s4 { fill: #b4501a; }
+.chart-dot.s1 { fill: var(--primary); } .chart-dot.s2 { fill: var(--accent); }
+.chart-dot.s3 { fill: var(--secondary); } .chart-dot.s4 { fill: #b4501a; }
 .legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: .4rem 0; font-size: .92rem; }
 .swatch { display: inline-block; width: .9rem; height: .9rem; border-radius: 3px; margin-right: .35rem; vertical-align: middle; }
-.swatch.s1 { background: #1f6f5c; } .swatch.s2 { background: #b97a00; }
-.swatch.s3 { background: #2b5fa8; } .swatch.s4 { background: #b4501a; }
+.swatch.s1 { background: var(--primary); } .swatch.s2 { background: var(--accent); }
+.swatch.s3 { background: var(--secondary); } .swatch.s4 { background: #b4501a; }
 .chart-table { margin: .5rem 0 1rem; }
 .chart-table summary { cursor: pointer; font-weight: 600; }
 .chart-grid-2 { margin-top: 1rem; }

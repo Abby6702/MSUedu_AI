@@ -1,19 +1,22 @@
 :root {
-  --primary: #1f6f5c;
-  --primary-dark: #175446;
-  --accent: #f2b134;
+  --primary: #7b1030;
+  --primary-dark: #5c0b22;
+  --secondary: #1d8b5a;
+  --secondary-dark: #156e46;
+  --accent: #d9b849;
+  --accent-soft: #f5e9b2;
   --ink: #1d2733;
-  --muted: #5b6673;
-  --bg: #f6f8f7;
+  --muted: #5e6672;
+  --bg: #f8f5f0;
   --card: #ffffff;
-  --border: #dde3e0;
-  --ok-bg: #e3f4ec;
-  --ok-ink: #14523b;
-  --err-bg: #fdeaea;
-  --err-ink: #8a1f1f;
+  --border: #e2d9c7;
+  --ok-bg: #eaf8ef;
+  --ok-ink: #176b46;
+  --err-bg: #fce8ea;
+  --err-ink: #8d2133;
   --radius: 12px;
-  --shadow: 0 8px 24px rgba(23, 84, 70, .055);
-  --shadow-raised: 0 14px 30px rgba(23, 84, 70, .11);
+  --shadow: 0 8px 24px rgba(92, 11, 34, .07);
+  --shadow-raised: 0 14px 30px rgba(92, 11, 34, .12);
 }
 
 * { box-sizing: border-box; }
@@ -22,7 +25,7 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--ink);
-  background: linear-gradient(180deg, #edf5f0 0, var(--bg) 19rem);
+  background: linear-gradient(180deg, #f2eadc 0, var(--bg) 19rem);
   line-height: 1.6;
 }
 
@@ -48,7 +51,7 @@ h3 { font-size: 1.15rem; }
 .site-header {
   background: linear-gradient(105deg, var(--primary-dark), var(--primary));
   color: #fff;
-  box-shadow: 0 2px 14px rgba(17, 58, 47, .16);
+  box-shadow: 0 2px 14px rgba(92, 11, 34, .18);
 }
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
@@ -87,9 +90,19 @@ h3 { font-size: 1.15rem; }
 }
 
 /* Page content */
-.hero { padding: 3rem 0 1.5rem; }
-.hero h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.2; margin: 0 0 .5rem; }
-.hero p { max-width: 60ch; color: var(--muted); font-size: 1.1rem; }
+.hero {
+  position: relative; overflow: hidden; margin-top: 1rem; padding: 3.5rem 2rem 2.2rem;
+  border-radius: 24px; box-shadow: 0 18px 40px rgba(92, 11, 34, .12);
+  background-image: linear-gradient(90deg, rgba(19, 14, 17, 0.62), rgba(19, 14, 17, 0.26)),
+                    url("../images/msu-campus-gate.jpg");
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  border: 1px solid rgba(255,255,255,.18);
+}
+.hero h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.2; margin: 0 0 .5rem; color: #fff; }
+.hero p { max-width: 60ch; color: rgba(255,255,255,.9); font-size: 1.1rem; }
+.hero .btn { background: var(--primary); border-color: var(--primary); color: #fff; }
+.hero .btn-outline { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.7); color: #fff; }
+.hero .btn-outline:hover { background: rgba(255,255,255,.2); color: #fff; }
 
 .container#main { padding-block: 1.75rem 3.25rem; animation: page-enter .45s ease-out both; }
 .grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
