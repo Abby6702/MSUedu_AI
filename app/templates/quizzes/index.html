@@ -23,10 +23,11 @@
     </select>
 
     <label for="topic_id">Lesson topic (optional)</label>
-    <select id="topic_id" name="topic_id">
+    <select id="topic_id" name="topic_id" {% if not data.subject_id %}disabled{% endif %}>
       <option value="">Not linked to a lesson</option>
       {% for t in topics %}
-        <option value="{{ t.id }}" {% if data.topic_id == t.id %}selected{% endif %}>{{ t.subject_name }}: {{ t.name }}</option>
+        <option value="{{ t.id }}" data-subject-id="{{ t.subject_id }}"
+          {% if data.topic_id == t.id %}selected{% endif %}>{{ t.subject_name }}: {{ t.name }}</option>
       {% endfor %}
     </select>
     <p class="hint">Linking a quiz to a lesson topic lets your learning profile track strengths and weaknesses for that topic.

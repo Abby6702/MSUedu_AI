@@ -132,12 +132,25 @@ def _openai_chat(messages, temperature, json_mode, max_tokens):
     try:
         data = response.json()
     except ValueError as error:
+        current_app.logger.warning("The AI service returned invalid JSON in a successful response.")
         raise OllamaBadResponse() from error
     choices = data.get("choices") if isinstance(data, dict) else None
     first = choices[0] if isinstance(choices, list) and choices else None
     message = first.get("message") if isinstance(first, dict) else None
     content = message.get("content") if isinstance(message, dict) else None
-    return _clean_reply(content)
+    try:
+        return _clean_reply(content)
+    except OllamaBadResponse:
+        current_app.logger.warning(
+            "The AI service returned no usable completion text "
+            "(response_keys=%s, choices_type=%s, message_type=%s, content_type=%s, finish_reason=%s).",
+            sorted(data) if isinstance(data, dict) else type(data).__name__,
+            type(choices).__name__,
+            type(message).__name__,
+            type(content).__name__,
+            first.get("finish_reason") if isinstance(first, dict) else None,
+        )
+        raise
 
 
 # ---------- the two functions the rest of the app uses ----------

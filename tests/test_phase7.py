@@ -1,6 +1,7 @@
 """Run with:  python -m pytest -v
 Ollama and MySQL are FAKED. These tests prove the permission rules, validation,
 real-availability maths and the 'nothing happens without Confirm' rule."""
+import io
 import json
 from datetime import date, datetime, timedelta
 
@@ -10,6 +11,7 @@ from app import create_app, timeutil
 from app.ai import agent_logic as al
 from app.ai import ollama_client as oc
 from app.services import agent_service, agent_tools as at, ai_service
+from app.services import file_service, payment_service
 from app.services import request_service as rs
 from app.services import subject_service, tutor_service as tutors, user_service
 from config import Config
@@ -245,9 +247,16 @@ FUTURE = timeutil.utcnow() + timedelta(days=3)
 def prep_env(monkeypatch, logs):
     calls = []
     monkeypatch.setattr(at, "query_all", lambda sql, params=None: [])
-    monkeypatch.setattr(rs, "tutor_subject_options", lambda tid: [{"id": 1, "name": "Calculus 1"}])
+    monkeypatch.setattr(rs, "tutor_subject_options", lambda tid: [{
+        "id": 1, "name": "Calculus 1", "rate_30": 100, "rate_60": 200,
+        "rate_90": 300, "rate_120": 400,
+    }])
     monkeypatch.setattr(tutors, "get_public_tutor",
-                        lambda tid: {"id": 5, "full_name": "Fictional Tutor", "availability": WEEKLY})
+                        lambda tid: {
+                            "id": 5, "full_name": "Fictional Tutor", "availability": WEEKLY,
+                            "payment_method": "gcash", "payment_account_name": "Tutor Account",
+                            "payment_account_number": "09171234567",
+                        })
     monkeypatch.setattr(rs, "create_request",
                         lambda uid, tid, data, dry_run=False: calls.append(dry_run) or (None, None))
     return calls
@@ -264,8 +273,33 @@ def prepare(app, **changes):
 def test_prepare_only_does_a_dry_run(app, prep_env, logs):
     result = prepare(app)
     assert result["ok"] and prep_env == [True]                     # never a real create
+    assert result["proposal"]["requires_payment_proof"] is True
     kinds = [p[1] for sql, p in logs if "INSERT INTO agent_proposals" in sql]
     assert kinds == ["request"]
+
+
+def test_prepare_passes_duration_to_request_validation(app, prep_env, monkeypatch, logs):
+    captured = {}
+
+    def create_request(_student_id, _tutor_id, data, dry_run=False):
+        captured.update(data=data, dry_run=dry_run)
+        return None, None
+
+    monkeypatch.setattr(rs, "create_request", create_request)
+    result = prepare(app, duration=90)
+
+    assert result["ok"]
+    assert captured["data"]["duration"] == 90
+    assert captured["dry_run"] is True
+    stored = next(params[2] for sql, params in logs if "INSERT INTO agent_proposals" in sql)
+    proposal_data = json.loads(stored)["data"]
+    assert proposal_data["duration"] == 90
+    assert proposal_data["expected_payment_amount"] == "300"
+    assert proposal_data["expected_payment_method"] == "gcash"
+    assert proposal_data["expected_account_name"] == "Tutor Account"
+    assert proposal_data["expected_account_number"] == "09171234567"
+    assert "Amount to pay: ₱300" in result["proposal"]["lines"]
+    assert "Account number / handle: 09171234567" in result["proposal"]["lines"]
 
 
 def test_the_action_log_never_contains_message_text(app, prep_env, logs):
@@ -320,8 +354,15 @@ def agent_env(monkeypatch, logs):
                   "tutoring_format": "both", "topics": None},
         "score": 1, "reasons": ["Teaches the subject you selected."], "notes": []}])
     monkeypatch.setattr(tutors, "get_public_tutor",
-                        lambda tid: {"id": 5, "full_name": "Fictional Tutor", "availability": WEEKLY})
-    monkeypatch.setattr(rs, "tutor_subject_options", lambda tid: [{"id": 1, "name": "Calculus 1"}])
+                        lambda tid: {
+                            "id": 5, "full_name": "Fictional Tutor", "availability": WEEKLY,
+                            "payment_method": "gcash", "payment_account_name": "Tutor Account",
+                            "payment_account_number": "09171234567",
+                        })
+    monkeypatch.setattr(rs, "tutor_subject_options", lambda tid: [{
+        "id": 1, "name": "Calculus 1", "rate_30": 100, "rate_60": 200,
+        "rate_90": 300, "rate_120": 400,
+    }])
     monkeypatch.setattr(rs, "create_request",
                         lambda uid, tid, data, dry_run=False: calls.append(dry_run) or (None, None))
     return calls
@@ -439,7 +480,10 @@ def test_status_explains_requests(app, agent_env, monkeypatch):
 # ======================= confirming (the ONLY way anything changes) =======================
 def _proposal(status="prepared", minutes=10, kind="request"):
     data = ({"tutor_id": 5, "subject_id": 1, "topic": "Limits", "format": "online",
-             "start": FUTURE.isoformat(), "end": (FUTURE + timedelta(hours=1)).isoformat()}
+             "start": FUTURE.isoformat(), "end": (FUTURE + timedelta(hours=1)).isoformat(),
+             "expected_payment_amount": "200", "expected_payment_method": "gcash",
+             "expected_account_name": "Tutor Account",
+             "expected_account_number": "09171234567"}
             if kind == "request" else {"request_id": 12})
     return {"id": 3, "kind": kind, "status": status,
             "expires_at": timeutil.utcnow() + timedelta(minutes=minutes),
@@ -448,24 +492,87 @@ def _proposal(status="prepared", minutes=10, kind="request"):
 
 @pytest.fixture
 def confirm_env(monkeypatch):
-    env = {"creates": [], "statuses": [], "cancels": [], "proposal": _proposal(), "claim": True}
+    env = {"creates": [], "request_data": [], "create_kwargs": [], "claim_calls": [],
+           "statuses": [], "cancels": [], "proposal": _proposal(), "claim": True}
     monkeypatch.setattr(at, "load_proposal", lambda pid, uid: env["proposal"])
-    monkeypatch.setattr(at, "claim_proposal", lambda pid, uid: env["claim"])
+
+    def claim_proposal(pid, uid):
+        env["claim_calls"].append((pid, uid))
+        return env["claim"]
+
+    monkeypatch.setattr(at, "claim_proposal", claim_proposal)
     monkeypatch.setattr(at, "set_status", lambda pid, uid, s: env["statuses"].append(s))
     monkeypatch.setattr(at, "log_step", lambda *a, **k: None)
     monkeypatch.setattr(user_service, "log_audit", lambda *a, **k: None)
-    monkeypatch.setattr(rs, "create_request",
-                        lambda uid, tid, data, dry_run=False: env["creates"].append(dry_run) or (11, None))
+
+    def create_request(uid, tid, data, dry_run=False, **kwargs):
+        env["creates"].append(dry_run)
+        env["request_data"].append(data)
+        env["create_kwargs"].append(kwargs)
+        return 11, None
+
+    monkeypatch.setattr(rs, "create_request", create_request)
+    monkeypatch.setattr(payment_service, "validate_proof", lambda _name, _data: "png")
     monkeypatch.setattr(rs, "perform_action",
                         lambda rid, uid, action, note=None: env["cancels"].append((rid, action)) or (True, "Cancelled."))
     return env
 
 
+def confirm_with_proof(client):
+    return client.post(
+        "/student/agent/proposals/3/confirm",
+        data={"payment_proof": (io.BytesIO(b"proof"), "receipt.png")},
+        content_type="multipart/form-data",
+    )
+
+
 def test_confirm_creates_the_request_for_real(client, monkeypatch, confirm_env):
     login_as(client, monkeypatch)
-    response = client.post("/student/agent/proposals/3/confirm")
+    response = confirm_with_proof(client)
     assert response.status_code == 200 and response.get_json()["ok"] is True
     assert confirm_env["creates"] == [False]                      # a REAL create, once
+    assert confirm_env["create_kwargs"][0] == {"proof_data": b"proof", "proof_kind": "png"}
+    assert confirm_env["request_data"][0]["expected_payment_amount"] == "200"
+    assert confirm_env["request_data"][0]["expected_payment_method"] == "gcash"
+    assert confirm_env["request_data"][0]["expected_account_name"] == "Tutor Account"
+    assert confirm_env["request_data"][0]["expected_account_number"] == "09171234567"
+
+
+def test_confirm_passes_duration_from_legacy_proposal(client, monkeypatch, confirm_env):
+    login_as(client, monkeypatch)
+    response = confirm_with_proof(client)
+    assert response.status_code == 200
+    assert confirm_env["request_data"][0]["duration"] == 60
+
+
+def test_confirm_requires_proof_without_consuming_the_proposal(client, monkeypatch, confirm_env):
+    login_as(client, monkeypatch)
+    response = client.post("/student/agent/proposals/3/confirm", json={})
+    assert response.status_code == 400
+    assert "Upload your payment proof" in response.get_json()["error"]
+    assert confirm_env["claim_calls"] == [] and confirm_env["statuses"] == []
+
+
+def test_confirm_rejects_a_proposal_without_payment_snapshot(client, monkeypatch, confirm_env):
+    login_as(client, monkeypatch)
+    del confirm_env["proposal"]["payload"]["data"]["expected_payment_amount"]
+    response = confirm_with_proof(client)
+    assert response.status_code == 409
+    assert "outdated" in response.get_json()["error"]
+    assert confirm_env["claim_calls"] == [] and confirm_env["creates"] == []
+
+
+def test_invalid_proof_does_not_consume_the_proposal(client, monkeypatch, confirm_env):
+    login_as(client, monkeypatch)
+
+    def reject_proof(_name, _data):
+        raise file_service.FileError("The file is not valid.")
+
+    monkeypatch.setattr(payment_service, "validate_proof", reject_proof)
+    response = confirm_with_proof(client)
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "The file is not valid."
+    assert confirm_env["claim_calls"] == [] and confirm_env["statuses"] == []
 
 
 def test_confirm_cancel_kind_cancels_the_session(client, monkeypatch, confirm_env):
@@ -500,7 +607,7 @@ def test_an_expired_proposal_is_refused(client, monkeypatch, confirm_env):
 def test_losing_the_claim_means_nothing_is_sent(client, monkeypatch, confirm_env):
     login_as(client, monkeypatch)
     confirm_env["claim"] = False                                   # e.g. a double click
-    assert client.post("/student/agent/proposals/3/confirm").status_code == 409
+    assert confirm_with_proof(client).status_code == 409
     assert confirm_env["creates"] == []
 
 
@@ -508,7 +615,7 @@ def test_a_conflict_at_confirm_time_is_reported(client, monkeypatch, confirm_env
     login_as(client, monkeypatch)
     monkeypatch.setattr(rs, "create_request", lambda *a, **k:
                         (None, "The tutor already has a confirmed session at that time."))
-    response = client.post("/student/agent/proposals/3/confirm")
+    response = confirm_with_proof(client)
     assert response.status_code == 409
     assert "already has a confirmed session" in response.get_json()["error"]
     assert confirm_env["statuses"] == ["discarded"]
@@ -520,7 +627,7 @@ def test_a_crash_lets_the_student_retry(client, monkeypatch, confirm_env):
     def boom(*a, **k):
         raise RuntimeError("db down")
     monkeypatch.setattr(rs, "create_request", boom)
-    assert client.post("/student/agent/proposals/3/confirm").status_code == 500
+    assert confirm_with_proof(client).status_code == 500
     assert confirm_env["statuses"] == ["prepared"]
 
 
@@ -548,7 +655,11 @@ def test_only_students_can_use_the_coordinator(client, monkeypatch):
 
 def test_page_loads_for_students(client, monkeypatch):
     login_as(client, monkeypatch)
-    assert client.get("/student/agent/").status_code == 200
+    response = client.get("/student/agent/")
+    assert response.status_code == 200
+    assert b"Ask me to find a tutor or guide you to a match" in response.data
+    assert b"Find an in-person Physics tutor on Friday at 3 PM" in response.data
+    assert b"coordinator-fab" not in response.data
 
 
 @pytest.mark.parametrize("body", [{}, {"message": ""}, {"message": "   "}, {"message": 5},

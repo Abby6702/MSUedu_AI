@@ -5,6 +5,7 @@ from flask import Blueprint, g, jsonify, render_template, request
 
 from app.auth_utils import role_required
 from app.services import agent_service
+from app.services import file_service, payment_service
 
 agent_bp = Blueprint("agent", __name__, url_prefix="/student/agent")
 MAX_MESSAGE = 500
@@ -66,7 +67,16 @@ def prepare():
 @agent_bp.route("/proposals/<int:proposal_id>/confirm", methods=["POST"])
 @role_required("student")
 def confirm(proposal_id):
-    status, payload = agent_service.confirm_proposal(g.user["id"], proposal_id)
+    proof_data, proof_kind = None, None
+    uploaded = request.files.get("payment_proof")
+    if uploaded is not None and uploaded.filename:
+        proof_data = uploaded.read(5 * 1024 * 1024 + 1)
+        try:
+            proof_kind = payment_service.validate_proof(uploaded.filename, proof_data)
+        except file_service.FileError as error:
+            return _error(str(error))
+    status, payload = agent_service.confirm_proposal(
+        g.user["id"], proposal_id, proof_data=proof_data, proof_kind=proof_kind)
     return jsonify(payload), status
 
 

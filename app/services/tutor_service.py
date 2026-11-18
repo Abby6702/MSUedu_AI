@@ -191,6 +191,15 @@ def search_tutors(filters):
     return query_all(sql, params)
 
 
+def list_public_tutors():
+    """List every active, approved tutor using only fields safe for public cards."""
+    return query_all(
+        SEARCH_BASE
+        + " WHERE u.role = 'tutor' AND u.is_active = 1 "
+        "AND tp.approval_status = 'approved' ORDER BY u.full_name ASC"
+    )
+
+
 def get_public_tutor(tutor_id):
     """What students may see. Email and student number are NOT selected.
     Returns None unless the tutor is approved and active."""

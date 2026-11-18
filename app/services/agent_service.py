@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import current_app
 
 from app.ai import agent_logic, agent_prompts, ollama_client
-from app.services import agent_tools, ai_service, tutor_service, user_service
+from app.services import agent_tools, ai_service, payment_service, tutor_service, user_service
 from app.services import request_service as rs
 from app.timeutil import to_local, utcnow
 from app.validators_request import DURATIONS
@@ -252,7 +252,7 @@ def prepare_choice(user_id, tutor_id, subject_id, topic, fmt, start, duration):
 
 
 # ---------- step 4: CONFIRM (only ever called from a button click) ----------
-def confirm_proposal(user_id, proposal_id):
+def confirm_proposal(user_id, proposal_id, proof_data=None, proof_kind=None):
     ctx = _new_ctx(user_id)
     proposal = agent_tools.load_proposal(proposal_id, user_id)
     if proposal is None or not proposal["payload"]:
@@ -262,18 +262,40 @@ def confirm_proposal(user_id, proposal_id):
     if proposal["expires_at"] <= utcnow():
         agent_tools.set_status(proposal_id, user_id, "expired")
         return 410, {"ok": False, "error": "This proposal expired. Please ask me again."}
+    if (proposal["kind"] == "request"
+            and (not proof_data or proof_kind not in payment_service.PROOF_KINDS)):
+        return 400, {"ok": False, "error": "Upload your payment proof before confirming the request."}
+    data = proposal["payload"]["data"]
+    expected_payment_fields = (
+        "expected_payment_amount", "expected_payment_method",
+        "expected_account_name", "expected_account_number",
+    )
+    if (proposal["kind"] == "request"
+            and any(not data.get(field) for field in expected_payment_fields)):
+        return 409, {"ok": False,
+                     "error": "This proposal is outdated. Ask me to find a tutor again."}
     if not agent_tools.claim_proposal(proposal_id, user_id):
         return 409, {"ok": False, "error": "This proposal was already handled or has expired."}
 
-    data = proposal["payload"]["data"]
     try:
         if proposal["kind"] == "request":
+            start = datetime.fromisoformat(data["start"])
+            end = datetime.fromisoformat(data["end"])
+            duration = data.get("duration")
+            if duration is None:
+                # Existing proposals predate the stored duration field.
+                duration = int((end - start).total_seconds() // 60)
             request_data = {"subject_id": data["subject_id"], "topic": data["topic"],
                             "description": "", "format": data["format"],
-                            "start": datetime.fromisoformat(data["start"]),
-                            "end": datetime.fromisoformat(data["end"])}
+                            "start": start, "end": end, "duration": duration,
+                            "expected_payment_amount": data["expected_payment_amount"],
+                            "expected_payment_method": data["expected_payment_method"],
+                            "expected_account_name": data["expected_account_name"],
+                            "expected_account_number": data["expected_account_number"]}
             # The REAL create: every check runs again, because things may have changed.
-            target_id, problem = rs.create_request(user_id, data["tutor_id"], request_data)
+            target_id, problem = rs.create_request(
+                user_id, data["tutor_id"], request_data,
+                proof_data=proof_data, proof_kind=proof_kind)
             ok = problem is None
             message = "Request sent. The tutor will reply soon." if ok else problem
             audit = "agent_request_confirmed"

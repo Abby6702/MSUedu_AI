@@ -69,8 +69,11 @@ h3 { font-size: 1.15rem; }
 .brand-logo {
   width: 70px;
   height: 70px;
+  padding: .25rem;
   object-fit: contain;
   display: block;
+  border-radius: 10px;
+  background: #fff;
 }
 .brand-text { display: inline-flex; align-items: center; }
 .brand span { color: var(--accent); }

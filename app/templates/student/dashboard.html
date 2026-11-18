@@ -1,55 +1,202 @@
 {% extends "base.html" %}
 {% block title %}Student dashboard – MSUEdu AI{% endblock %}
 {% block content %}
-<h1>Welcome, {{ g.user.full_name }}!</h1>
+<div class="student-dashboard">
+  <div class="dashboard-welcome-area">
+    <section class="dashboard-hero" aria-labelledby="dashboard-welcome">
+      <div class="dashboard-welcome">
+        <h1 id="dashboard-welcome">Welcome, <span>{{ g.user.full_name }}!</span></h1>
+        <p>Your personalized learning hub at MSUEdu AI</p>
+      </div>
+      <p class="dashboard-motto">Learn <span>•</span> Connect <span>•</span> Grow</p>
+      <details class="dashboard-quick-links">
+        <summary class="quick-links-toggle" aria-controls="dashboardQuickLinks">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <span>Quick Links</span>
+          <svg class="quick-links-chevron" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m7 10 5 5 5-5"></path>
+          </svg>
+        </summary>
+      </details>
+    </section>
 
-{% if not profile.get('course') %}
-  <div class="flash flash-info">Your profile is incomplete.
-    <a href="{{ url_for('account.profile') }}">Add your course and year level</a>.</div>
-{% endif %}
+    <div class="quick-links-panel" id="dashboardQuickLinks">
+      <div class="quick-links-panel-inner">
+        <nav class="quick-links-grid" aria-label="Quick links">
+          <a class="quick-link" href="{{ url_for('student.find_tutors') }}">
+            <span class="quick-link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </span>
+            <span>Browse Tutor Profiles</span>
+          </a>
+          <a class="quick-link" href="{{ url_for('bookings.my_requests') }}">
+            <span class="quick-link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M16 2v4M8 2v4M3 9h18"></path><circle cx="16" cy="15" r="3"></circle><path d="M16 13.5v1.7l1.1.7"></path></svg>
+            </span>
+            <span>My Requests and Sessions</span>
+          </a>
+          <a class="quick-link" href="{{ url_for('assistant.page') }}">
+            <span class="quick-link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="3"></rect><path d="M12 3v4M8 13h.01M16 13h.01M9 17h6"></path><path d="m5 3 1 2m13-2-1 2"></path></svg>
+            </span>
+            <span>AI Tutor &amp; Notes Summarizer</span>
+          </a>
+          <a class="quick-link" href="{{ url_for('quizzes.index') }}">
+            <span class="quick-link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 4H5a2 2 0 0 0-2 2v14h18V6a2 2 0 0 0-2-2h-3"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m7 13 2 2 4-4m3 1h2"></path></svg>
+            </span>
+            <span>Quizzes</span>
+          </a>
+          <a class="quick-link" href="{{ url_for('account.profile') }}">
+            <span class="quick-link-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+            </span>
+            <span>My Profile</span>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </div>
 
-<div class="grid">
-  <article class="card"><h2>Upcoming sessions</h2>
-    {% if upcoming %}
-      <ul>{% for r in upcoming %}<li>{{ r.subject_name }} with {{ r.tutor_name }}<br>
-        <span class="meta">{{ r.start_at|local_dt }}</span></li>{% endfor %}</ul>
-    {% else %}<p class="empty">No upcoming sessions.</p>{% endif %}
-    <a href="{{ url_for('bookings.my_requests') }}">See all</a></article>
-  <article class="card"><h2>Pending requests</h2>
-    {% if pending %}
-      <ul>{% for r in pending %}<li>{{ r.subject_name }} with {{ r.tutor_name }}
-        <span class="badge badge-{{ r.status }}">{{ r.status|replace('_', ' ')|capitalize }}</span></li>{% endfor %}</ul>
-    {% else %}<p class="empty">Nothing pending.</p>{% endif %}
-    <a href="{{ url_for('bookings.my_requests') }}">See all</a></article>
-  <article class="card"><h2>Recent learning activity</h2>
-    {% if activity %}
-      <ul>{% for a in activity %}<li>Quiz: {{ a.topic }}, {{ a.score }} / {{ a.total }}<br>
-        <span class="meta">{{ a.submitted_at|local_dt }}</span></li>{% endfor %}</ul>
-    {% else %}<p class="empty">No quizzes yet.</p>{% endif %}
-    <a href="{{ url_for('quizzes.index') }}">Quizzes</a></article>
-  <article class="card"><h2>Recommended for you</h2>
-      {% if recs %}<ul>{% for r in recs %}<li>{{ r.title }}</li>{% endfor %}</ul>
-      {% else %}<p class="empty">No recommendations yet. Take a quiz linked to a lesson topic.</p>{% endif %}
-      <a href="{{ url_for('learning.recommendations') }}">See all</a></article>
+  {% if not profile.get('course') %}
+    <div class="flash flash-info">Your profile is incomplete.
+      <a href="{{ url_for('account.profile') }}">Add your course and year level</a>.</div>
+  {% endif %}
+
+  <div class="dashboard-grid">
+    <article class="dashboard-card">
+      <header class="dashboard-card-header">
+        <span class="dashboard-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+            <path d="M7 3v4m10-4v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path>
+          </svg>
+        </span>
+        <h2>Upcoming Sessions</h2>
+      </header>
+      <div class="dashboard-card-body">
+        {% if upcoming %}
+          <ul class="dashboard-items">
+            {% for r in upcoming %}
+              <li class="dashboard-item dashboard-session">
+                <span class="dashboard-row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="10" rx="2"></rect><path d="m16 10 5-3v10l-5-3z"></path></svg>
+                </span>
+                <span class="dashboard-item-copy">
+                  <strong>{{ r.subject_name }} with {{ r.tutor_name }}</strong>
+                  <span class="dashboard-meta">{{ r.start_at|local_dt }}</span>
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="dashboard-empty">No upcoming sessions.</p>
+        {% endif %}
+        <a class="dashboard-card-link" href="{{ url_for('bookings.my_requests') }}">See all</a>
+      </div>
+    </article>
+
+    <article class="dashboard-card">
+      <header class="dashboard-card-header">
+        <span class="dashboard-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+            <path d="m4 7 8 6 8-6"></path>
+          </svg>
+        </span>
+        <h2>Pending Requests</h2>
+      </header>
+      <div class="dashboard-card-body">
+        {% if pending %}
+          <ul class="dashboard-items">
+            {% for r in pending %}
+              <li class="dashboard-item">
+                <span class="dashboard-row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"></path></svg>
+                </span>
+                <span class="dashboard-item-copy">
+                  <strong>{{ r.subject_name }} with {{ r.tutor_name }}</strong>
+                  <span class="badge badge-{{ r.status }}">{{ r.status|replace('_', ' ')|capitalize }}</span>
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="dashboard-empty-state">
+            <span class="dashboard-empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg>
+            </span>
+            <strong>No pending requests</strong>
+            <span>You’re all caught up!</span>
+          </div>
+        {% endif %}
+        <a class="dashboard-card-link" href="{{ url_for('bookings.my_requests') }}">See all</a>
+      </div>
+    </article>
+
+    <article class="dashboard-card">
+      <header class="dashboard-card-header">
+        <span class="dashboard-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 20V12h4v8zm6 0V4h4v16zm6 0V8h4v12z"></path>
+          </svg>
+        </span>
+        <h2>Recent Learning Activity</h2>
+      </header>
+      <div class="dashboard-card-body">
+        {% if activity %}
+          <ul class="dashboard-items dashboard-activity-list">
+            {% for a in activity %}
+              <li class="dashboard-activity-item">
+                <span class="dashboard-row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="m9 6 10 6-10 6z"></path></svg>
+                </span>
+                <span class="dashboard-item-copy">
+                  <strong>Quiz: {{ a.topic }} {{ a.score }} / {{ a.total }}</strong>
+                  <span class="dashboard-meta">{{ a.submitted_at|local_dt }}</span>
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="dashboard-empty">No quizzes yet.</p>
+        {% endif %}
+        <a class="dashboard-card-link" href="{{ url_for('quizzes.index') }}">View more</a>
+      </div>
+    </article>
+
+    <article class="dashboard-card">
+      <header class="dashboard-card-header">
+        <span class="dashboard-card-icon dashboard-star-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="m12 2.5 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
+          </svg>
+        </span>
+        <h2>Recommended for You</h2>
+      </header>
+      <div class="dashboard-card-body">
+        {% if recs %}
+          <ul class="dashboard-items dashboard-recommendations">
+            {% for r in recs %}
+              <li class="dashboard-recommendation-item">
+                <span class="dashboard-row-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 4h14v16l-7-4-7 4z"></path></svg>
+                </span>
+                <strong>{{ r.title }}</strong>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="dashboard-empty">No recommendations yet. Take a quiz linked to a lesson topic.</p>
+        {% endif %}
+        <a class="dashboard-card-link" href="{{ url_for('learning.recommendations') }}">See all</a>
+      </div>
+    </article>
+  </div>
 </div>
-
-<section class="card" aria-labelledby="suggested-subjects-heading">
-  <h2 id="suggested-subjects-heading">Suggested subjects</h2>
-  {% if suggested %}
-      <ul>{% for s in suggested %}
-        <li><a href="{{ url_for('student.find_tutors', subject_id=s.id) }}">{{ s.name }}</a></li>
-      {% endfor %}</ul>
-  {% else %}<p class="empty">No subjects yet.</p>{% endif %}
-</section>
-
-<h2>Quick links</h2>
-<p class="quick-links">
-  <a class="btn" href="{{ url_for('agent.page') }}">AI tutoring coordinator</a>
-  <a class="btn" href="{{ url_for('student.find_tutors') }}">Find tutors</a>
-  <a class="btn" href="{{ url_for('student.match') }}">Guided matching</a>
-  <a class="btn" href="{{ url_for('bookings.my_requests') }}">My requests and sessions</a>
-  <a class="btn" href="{{ url_for('assistant.page') }}">AI assistant</a>
-  <a class="btn" href="{{ url_for('quizzes.index') }}">Quizzes</a>
-  <a class="btn btn-outline" href="{{ url_for('account.profile') }}">My profile</a>
-</p>
 {% endblock %}

@@ -74,6 +74,23 @@ def test_search_args_are_sanitised():
     assert f["day"] is None and f["format"] == "" and f["subject_id"] is None
 
 
+def test_public_tutor_directory_lists_all_approved_active_tutors(monkeypatch):
+    executed = {}
+
+    def capture(sql, params=None):
+        executed.update(sql=sql, params=params)
+        return []
+
+    monkeypatch.setattr(ts, "query_all", capture)
+
+    assert ts.list_public_tutors() == []
+    assert "u.is_active = 1" in executed["sql"]
+    assert "tp.approval_status = 'approved'" in executed["sql"]
+    assert "ORDER BY u.full_name ASC" in executed["sql"]
+    assert "LIMIT" not in executed["sql"]
+    assert "u.email" not in executed["sql"]
+
+
 # ---- matching rules ----
 TUTOR = {"id": 5, "full_name": "Fictional Tutor", "tutoring_format": "online", "topics": "limits"}
 SLOTS = [{"day_of_week": 0, "start_time": T(14), "end_time": T(16)}]
@@ -126,10 +143,24 @@ def test_tutor_blocked_from_student_search_and_admin(client, monkeypatch):
     assert client.post("/admin/subjects/1/toggle").status_code == 403
     
 
-def test_student_search_page_loads_with_fake_data(client, monkeypatch):
+def test_student_tutor_directory_lists_all_approved_profiles(client, monkeypatch):
     login_as(client, monkeypatch, "student")
-    monkeypatch.setattr(ts, "search_tutors", lambda f: [])
-    monkeypatch.setattr(subject_service, "list_subjects", lambda active_only=True: [])
+    profiles = [
+        {"id": 11, "full_name": "Tutor One", "course": "BSCS", "year_level": 3,
+         "has_photo": 0, "subject_names": "Math", "slot_count": 2, "tutoring_format": "online"},
+        {"id": 12, "full_name": "Tutor Two", "course": "BSIT", "year_level": 2,
+         "has_photo": 1, "subject_names": "Physics", "slot_count": 1, "tutoring_format": "both"},
+    ]
+    monkeypatch.setattr(ts, "list_public_tutors", lambda: profiles)
     response = client.get("/student/tutors?q=math")
     assert response.status_code == 200
-    assert b"No approved tutors" in response.data
+    assert b"Tutor One" in response.data and b"Tutor Two" in response.data
+    assert b"Name, subject or topic" not in response.data
+    assert b"View profile" in response.data
+
+
+def test_old_guided_matching_url_redirects_to_tutor_directory(client, monkeypatch):
+    login_as(client, monkeypatch, "student")
+    response = client.get("/student/match")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/student/tutors")

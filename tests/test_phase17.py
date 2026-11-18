@@ -577,7 +577,9 @@ def test_the_upload_route_alone_accepts_bigger_requests(client, monkeypatch, env
 
 def test_the_upload_path_pattern():
     assert UPLOAD_PATH.match("/sessions/12/files")
-    for path in ("/sessions/12/files/3", "/sessions/12", "/sessions/x/files", "/student/sessions/12/files"):
+    assert UPLOAD_PATH.match("/student/agent/proposals/12/confirm")
+    for path in ("/sessions/12/files/3", "/sessions/12", "/sessions/x/files",
+                 "/student/agent/proposals/x/confirm", "/student/sessions/12/files"):
         assert not UPLOAD_PATH.match(path)
 
 

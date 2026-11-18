@@ -206,4 +206,6 @@ def test_the_quiz_page_offers_lesson_topics(client, monkeypatch):
     monkeypatch.setattr(quiz_service, "list_quizzes", lambda uid: [])
     monkeypatch.setattr(learning_service, "list_topics", lambda: [
         {"id": 7, "subject_id": 4, "name": "Functions", "level": 3, "subject_name": "Python Programming"}])
-    assert b"Python Programming: Functions" in client.get("/student/quizzes/").data
+    page = client.get("/student/quizzes/").data
+    assert b'option value="7" data-subject-id="4"' in page
+    assert b"Python Programming: Functions" in page

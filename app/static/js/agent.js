@@ -15,21 +15,26 @@ document.addEventListener("DOMContentLoaded", () => {
     return node;
   }
 
-  async function postJson(url, payload) {
+  async function post(url, payload) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 150000);
+    const isFormData = payload instanceof FormData;
+    const headers = { "X-CSRFToken": csrf };
+    if (!isFormData) headers["Content-Type"] = "application/json";
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
-        body: JSON.stringify(payload || {}),
+        headers,
+        body: isFormData ? payload : JSON.stringify(payload || {}),
         signal: controller.signal,
         credentials: "same-origin",
       });
       let data = null;
       try { data = await res.json(); } catch (_) { /* not JSON */ }
       if (!res.ok || !data || !data.ok) {
-        throw new Error((data && data.error) || "Something went wrong. Please try again.");
+        const error = new Error((data && data.error) || "Something went wrong. Please try again.");
+        error.status = res.status;
+        throw error;
       }
       return data;
     } catch (err) {
@@ -80,6 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
     box.appendChild(list);
     box.appendChild(el("p", "hint",
       `Prepared only. Nothing happens until you confirm. Expires in ${card.expires_minutes} minutes.`));
+    let proofInput = null;
+    if (card.requires_payment_proof) {
+      const proofLabel = el("label", "proof-upload", "Payment proof (PDF, JPG, PNG or WebP)");
+      proofInput = el("input");
+      proofInput.type = "file";
+      proofInput.id = "payment-proof-" + card.id;
+      proofInput.accept = ".pdf,.jpg,.jpeg,.png,.webp";
+      proofInput.required = true;
+      proofLabel.htmlFor = proofInput.id;
+      box.append(proofLabel, proofInput,
+        el("p", "hint", "Upload your payment proof to send this request."));
+    }
     const result = el("p", "proposal-result");
     const actions = el("p", "review-actions");
     const confirm = el("button", "btn", "Confirm");
@@ -89,10 +106,21 @@ document.addEventListener("DOMContentLoaded", () => {
     box.append(actions, result);
 
     const urlFor = (template) => template.replace("/0/", "/" + card.id + "/");
-    async function finish(url, button, okClass) {
+    async function finish(url, okClass, isConfirm) {
+      if (isConfirm && proofInput && !proofInput.files.length) {
+        result.textContent = "Choose your payment proof before confirming.";
+        result.className = "proposal-result flash flash-error";
+        proofInput.focus();
+        return;
+      }
       confirm.disabled = discard.disabled = true;
       try {
-        const data = await postJson(url, {});
+        let payload = {};
+        if (isConfirm && proofInput) {
+          payload = new FormData();
+          payload.append("payment_proof", proofInput.files[0]);
+        }
+        const data = await post(url, payload);
         result.textContent = data.message;
         result.className = "proposal-result flash " + okClass;
         actions.hidden = true;
@@ -100,11 +128,13 @@ document.addEventListener("DOMContentLoaded", () => {
         result.textContent = err.message;
         result.className = "proposal-result flash flash-error";
         confirm.disabled = discard.disabled = false;
-        if (/already handled|expired|not found/i.test(err.message)) actions.hidden = true;
+        if (err.status === 409 || /already handled|expired|not found/i.test(err.message)) {
+          actions.hidden = true;
+        }
       }
     }
-    confirm.addEventListener("click", () => finish(urlFor(root.dataset.confirmUrl), confirm, "flash-success"));
-    discard.addEventListener("click", () => finish(urlFor(root.dataset.discardUrl), discard, "flash-info"));
+    confirm.addEventListener("click", () => finish(urlFor(root.dataset.confirmUrl), "flash-success", true));
+    discard.addEventListener("click", () => finish(urlFor(root.dataset.discardUrl), "flash-info", false));
     add(box);
   }
 
@@ -124,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         b.addEventListener("click", async () => {
           b.disabled = true;
           try {
-            const data = await postJson(root.dataset.prepareUrl, {
+            const data = await post(root.dataset.prepareUrl, {
               tutor_id: s.tutor_id, subject_id: ctx.subject_id, topic: ctx.topic,
               format: s.format, start: slot.start_iso, duration: ctx.duration,
             });
@@ -150,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
     $("chatSend").disabled = true;
     $("chatBusy").hidden = false;
     try {
-      const data = await postJson(root.dataset.messageUrl, { message });
+      const data = await post(root.dataset.messageUrl, { message });
       renderSteps(data.steps);
       add(el("div", "msg msg-ai", data.reply));
       if (data.context) context = data.context;

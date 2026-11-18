@@ -89,9 +89,9 @@ def _load_payload(value):
         return None
 
 
-def _card(proposal_id, payload):
+def _card(proposal_id, kind, payload):
     return {"id": proposal_id, "title": payload["title"], "lines": payload["lines"],
-            "expires_minutes": PROPOSAL_MINUTES}
+            "expires_minutes": PROPOSAL_MINUTES, "requires_payment_proof": kind == "request"}
 
 
 def _store_proposal(user_id, kind, data, title, lines):
@@ -105,7 +105,7 @@ def _store_proposal(user_id, kind, data, title, lines):
     for row in rows:                                     # avoid duplicate proposals
         existing = _load_payload(row["payload"])
         if row["kind"] == kind and existing and existing.get("data") == data:
-            return {"ok": True, "proposal": _card(row["id"], existing)}
+            return {"ok": True, "proposal": _card(row["id"], kind, existing)}
     if len(rows) >= MAX_PREPARED:
         return {"ok": False, "problem": "You have several unconfirmed proposals. "
                                         "Confirm or discard some of them first."}
@@ -116,7 +116,7 @@ def _store_proposal(user_id, kind, data, title, lines):
         (user_id, kind, json.dumps(payload, ensure_ascii=False), now,
          now + timedelta(minutes=PROPOSAL_MINUTES)),
     )
-    return {"ok": True, "proposal": _card(new_id, payload)}
+    return {"ok": True, "proposal": _card(new_id, kind, payload)}
 
 
 def load_proposal(proposal_id, user_id):
@@ -209,17 +209,31 @@ def _t_prepare_request(user_id, tutor_id, subject_id, topic, format, start, dura
         return {"ok": False, "problem": "That tutor does not teach this subject or is not available."}
 
     end = start + timedelta(minutes=duration)
+    payment_amount = subject[f"rate_{duration}"]
+    payment_method = tutor["payment_method"]
+    account_name = tutor["payment_account_name"]
+    account_number = tutor["payment_account_number"]
     data = {"subject_id": subject_id, "topic": topic, "description": "", "format": format,
-            "start": start, "end": end}
+            "start": start, "end": end, "duration": duration}
     _new_id, problem = rs.create_request(user_id, tutor_id, data, dry_run=True)
     if problem:
         return {"ok": False, "problem": problem}
 
     stored = {"tutor_id": tutor_id, "subject_id": subject_id, "topic": topic, "format": format,
-              "start": start.isoformat(), "end": end.isoformat()}
+              "start": start.isoformat(), "end": end.isoformat(), "duration": duration,
+              "expected_payment_amount": str(payment_amount),
+              "expected_payment_method": payment_method,
+              "expected_account_name": account_name,
+              "expected_account_number": account_number}
+    payment_label = {"gcash": "GCash", "maya": "Maya",
+                     "bank_transfer": "Bank transfer"}.get(payment_method, payment_method)
     lines = [f"Tutor: {tutor['full_name']}", f"Subject: {subject['name']}", f"Topic: {topic}",
              f"When: {format_range_local(start, end)}",
-             f"Format: {tutor_service.FORMAT_LABELS[format]}"]
+             f"Format: {tutor_service.FORMAT_LABELS[format]}",
+             f"Amount to pay: ₱{payment_amount}",
+             f"Payment method: {payment_label}",
+             f"Account name: {account_name}",
+             f"Account number / handle: {account_number}"]
     return _store_proposal(user_id, "request", stored, "Tutoring request ready to send", lines)
 
 

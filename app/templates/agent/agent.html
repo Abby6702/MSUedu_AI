@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Tutoring coordinator – MSUEdu AI{% endblock %}
 {% block content %}
-<h1>AI tutoring coordinator</h1>
+<h1 id="ai-coordinator-heading">AI Tutoring Coordinator</h1>
 <p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a> ·
    <a href="{{ url_for('bookings.my_requests') }}">My requests and sessions</a></p>
 
@@ -15,18 +15,20 @@
 
   <div id="aiBanner" class="flash flash-error" role="alert" hidden></div>
 
-  <p class="hint">Tell me what you need in your own words. I search real tutor availability and
-    <strong>prepare</strong> requests, but <strong>nothing is sent, cancelled or changed until you
-    press Confirm</strong>. I cannot accept requests for tutors. The AI only helps me understand your
-    message. Tutors, times and statuses come straight from the database. Messages are not saved.
-    Please do not type passwords or private information.</p>
+  <section class="card" id="ai-coordinator" aria-labelledby="ai-coordinator-heading">
+    <p class="hint">Ask me to find a tutor or guide you to a match. Include your subject and any
+      preferences for day, time, or online/in-person format; I’ll show why tutors match and their real
+      open times. I can <strong>prepare</strong> a request, but <strong>nothing is sent, cancelled or
+      changed until you press Confirm</strong>. The AI only helps me understand your message. Tutors,
+      times and statuses come straight from the database. Messages are not saved. Please do not type
+      passwords or private information.</p>
 
-  <section class="card">
     <p><strong>Try:</strong></p>
     <p class="quick-links">
-      <button type="button" class="btn btn-small btn-outline example">I need help with Calculus 1 on Monday afternoon</button>
+      <button type="button" class="btn btn-small btn-outline example">Find me a Calculus 1 tutor on Monday afternoon</button>
       <button type="button" class="btn btn-small btn-outline example">What is the status of my requests?</button>
       <button type="button" class="btn btn-small btn-outline example">Find me an online Statistics tutor tomorrow morning</button>
+      <button type="button" class="btn btn-small btn-outline example">Find an in-person Physics tutor on Friday at 3 PM</button>
     </p>
 
     <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-label="Conversation">

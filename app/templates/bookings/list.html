@@ -4,7 +4,7 @@
 {% block content %}
 <h1>{{ title }}</h1>
 <p><a href="{{ url_for('account.dashboard') }}">← Back to dashboard</a>
-  {% if viewer == 'student' %} · <a href="{{ url_for('student.find_tutors') }}">Find a tutor</a>{% endif %}</p>
+  {% if viewer == 'student' %} · <a href="{{ url_for('student.find_tutors') }}">Browse tutor profiles</a>{% endif %}</p>
 <p class="hint">All times are Philippine time.</p>
 
 {% if error %}<div class="flash flash-error" role="alert">{{ error }}</div>{% endif %}

@@ -127,6 +127,19 @@ def test_malformed_online_replies_are_rejected(monkeypatch, payload):
         oc.chat([])
 
 
+def test_malformed_online_reply_logs_shape_without_reply_or_prompt(monkeypatch, caplog):
+    payload = {"choices": [{"message": {"content": {"private": "reply"}},
+                            "finish_reason": "stop"}]}
+    monkeypatch.setattr(requests, "post", lambda *a, **k: FakeResponse(200, payload))
+
+    with create_app(OnlineConfig).app_context(), pytest.raises(oc.OllamaBadResponse):
+        oc.chat([{"role": "user", "content": "private prompt"}])
+
+    assert "content_type=dict" in caplog.text
+    assert "private reply" not in caplog.text
+    assert "private prompt" not in caplog.text
+
+
 def test_online_status_checks_settings_without_any_network_call(monkeypatch):
     monkeypatch.setattr(requests, "get", lambda *a, **k: pytest.fail("no network call expected"))
     with create_app(OnlineConfig).app_context():
@@ -357,6 +370,43 @@ def test_the_page_offers_subjects_and_lessons(client, monkeypatch, env):
     page = client.get("/student/assistant/")
     assert page.status_code == 200 and b"Python Programming: Loops" in page.data
     assert b"conversations are saved" in page.data and b"not a human tutor" in page.data
+    assert b"Ask the AI tutor" in page.data and b"Summarize your notes" in page.data
+    assert b'class="coordinator-fab"' in page.data
+
+
+def test_coordinator_fab_is_not_shown_to_tutors(client, monkeypatch):
+    login_as(client, monkeypatch, role="tutor")
+    page = client.get("/about")
+    assert page.status_code == 200
+    assert b"coordinator-fab" not in page.data
+
+
+def test_student_dashboard_uses_floating_coordinator_shortcut(client, monkeypatch):
+    login_as(client, monkeypatch)
+    monkeypatch.setattr(user_service, "get_profile", lambda *_args: {})
+
+    page = client.get("/student/dashboard")
+
+    assert page.status_code == 200
+    assert b"AI Tutoring Coordinator: Find &amp; Match Tutors" not in page.data
+    assert b'class="coordinator-fab"' in page.data
+    assert b'<section class="dashboard-hero" aria-labelledby="dashboard-welcome">' in page.data
+    assert b'<h1 id="dashboard-welcome">Welcome, <span>Test Person!</span></h1>' in page.data
+    assert b'<details class="dashboard-quick-links">' in page.data
+    assert b'<span>Quick Links</span>' in page.data
+    assert b'aria-controls="dashboardQuickLinks"' in page.data
+    assert b'<div class="quick-links-panel" id="dashboardQuickLinks">' in page.data
+    assert b'<nav class="quick-links-grid" aria-label="Quick links">' in page.data
+    assert b"Browse Tutor Profiles" in page.data
+    assert b"My Requests and Sessions" in page.data
+    assert b"AI Tutor &amp; Notes Summarizer" in page.data
+    assert b">Quizzes<" in page.data
+    assert b"My Profile" in page.data
+    assert b'href="/student/tutors"' in page.data
+    assert b'href="/student/requests"' in page.data
+    assert b'href="/student/assistant/"' in page.data
+    assert b'href="/student/quizzes/"' in page.data
+    assert b'href="/profile"' in page.data
 
 
 def test_the_page_still_loads_if_lessons_fail(client, monkeypatch, env):

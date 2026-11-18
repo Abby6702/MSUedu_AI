@@ -22,7 +22,7 @@
     {% elif r.kind == 'practice' %}
       <a class="btn btn-small" href="{{ url_for('quizzes.index', subject_id=r.subject_id, topic_id=r.topic_id, difficulty=r.difficulty) }}">Practice quiz</a>
     {% elif r.kind == 'human_tutor' %}
-      <a class="btn btn-small" href="{{ url_for('student.find_tutors', subject_id=r.subject_id) }}">Find a student tutor</a>
+      <a class="btn btn-small" href="{{ url_for('student.find_tutors') }}">Browse tutor profiles</a>
     {% endif %}
     <form method="post" action="{{ url_for('learning.dismiss_recommendation', rec_id=r.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

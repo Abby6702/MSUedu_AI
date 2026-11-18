@@ -1,10 +1,11 @@
 """Run with:  python -m pytest -v   (MySQL is faked.)"""
 from datetime import date, datetime
 from pathlib import Path
+import re
 
 import pytest
 
-from app import create_app
+from app import create_app, deploy_checks
 from app.services import learning_service as ls
 from app.services import user_service
 from config import Config
@@ -71,6 +72,27 @@ def test_the_seed_file_is_complete_and_safe():
     assert sql.count("INSERT IGNORE INTO topics") == 8
     assert sql.count("INSERT IGNORE INTO lessons") == 8
     assert "DROP " not in sql.upper()
+
+
+def test_every_built_in_subject_has_idempotent_starter_topics_and_lessons():
+    subject_schema = (ROOT / "database" / "schema_phase3.sql").read_text(encoding="utf-8")
+    python_schema = (ROOT / "database" / "schema_phase11.sql").read_text(encoding="utf-8")
+    curriculum_sql = (ROOT / "database" / "schema_phase21.sql").read_text(encoding="utf-8")
+    starter_subjects = re.findall(
+        r"\('([^']+)', '(?:Mathematics|Science|Computing|Languages)'\)", subject_schema)
+    starter_subjects.append("Python Programming")
+    statements = deploy_checks.split_sql(curriculum_sql)
+
+    assert len(starter_subjects) == 9
+    assert "VALUES ('Python Programming', 'Computing')" in python_schema
+    assert len(statements) == 3
+    topics, lessons = statements[1:]
+    assert topics.startswith("INSERT IGNORE INTO topics")
+    assert lessons.startswith("INSERT IGNORE INTO lessons")
+    assert topics.count("UNION ALL SELECT") == lessons.count("UNION ALL SELECT") == 29
+    assert all(f"'{name}'" in topics and f"'{name}'" in lessons for name in starter_subjects)
+    assert all(f"'{name}'" in topics and f"'{name}'" in lessons
+               for name in ("Limits and Continuity", "Derivatives:", "Integrals"))
 
 
 # ---------- routes ----------

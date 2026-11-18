@@ -207,7 +207,7 @@ def payment_proof(request_id):
     if not (folder / name).is_file():
         abort(404)
     return send_from_directory(str(folder), name, mimetype=payment_service.proof_mimetype(name),
-                               as_attachment=True, download_name="payment-proof" + folder.joinpath(name).suffix)
+                               as_attachment=False, download_name="payment-proof" + folder.joinpath(name).suffix)
 
 
 @bookings_bp.route("/requests/<int:request_id>/payment-proof", methods=["POST"])

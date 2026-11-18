@@ -95,6 +95,28 @@ def test_payment_review_requires_tutor_role(monkeypatch):
     assert client.post("/requests/12/payment/reject").status_code == 403
 
 
+def test_payment_proof_is_served_for_inline_viewing(monkeypatch, tmp_path):
+    app = create_app(PaymentConfig)
+    user = {"id": 8, "full_name": "Tutor", "email": "tutor@example.test",
+            "role": "tutor", "is_active": 1}
+    proof_name = "a" * 32 + ".png"
+    (tmp_path / proof_name).write_bytes(b"image data")
+    monkeypatch.setattr(user_service, "get_user_by_id", lambda _id: user)
+    monkeypatch.setattr(rs, "get_for_user", lambda _request_id, _user_id: {
+        "payment_proof_path": proof_name,
+    })
+    monkeypatch.setattr(payment_service, "proofs_dir", lambda: tmp_path)
+    client = app.test_client()
+    with client.session_transaction() as session:
+        session["user_id"] = 8
+
+    response = client.get("/requests/12/payment-proof")
+
+    assert response.status_code == 200
+    assert response.mimetype == "image/png"
+    assert response.headers["Content-Disposition"].startswith("inline;")
+
+
 def test_student_reviews_price_and_submits_payment_proof(monkeypatch):
     app = create_app(PaymentConfig)
     user = {"id": 9, "full_name": "Student", "email": "student@example.test",

@@ -1,8 +1,10 @@
 {% extends "base.html" %}
-{% block title %}AI tutor – MSUEdu AI{% endblock %}
+{% block title %}AI tutor & notes – MSUEdu AI{% endblock %}
 {% block content %}
-<h1>AI tutor</h1>
+<h1>AI tutor &amp; notes summarizer</h1>
 <p><a href="{{ url_for('student.dashboard') }}">← Back to dashboard</a></p>
+<p class="hint">Ask study questions or turn your lesson notes into a summary. Choose a tool below;
+  your notes are used only to create the summary and are not saved.</p>
 
 <div id="assistant"
      data-csrf="{{ csrf_token() }}"
@@ -18,7 +20,7 @@
     can continue them. Only you can see them in the app, and you can delete them at any time. Please do not type
     passwords or private information.</p>
 
-  <div class="tab-buttons" role="tablist">
+  <div class="tab-buttons" role="tablist" aria-label="AI study tools">
     <button type="button" class="tab-btn active" id="tabChat" role="tab" aria-selected="true"
             aria-controls="panelChat">Ask the AI tutor</button>
     <button type="button" class="tab-btn" id="tabSummary" role="tab" aria-selected="false"
@@ -33,6 +35,7 @@
     </aside>
 
     <div class="card">
+      <h2>Ask the AI tutor</h2>
       <div class="filter-form">
         <div><label for="chatSubject">Subject (optional)</label>
           <select id="chatSubject">
@@ -64,9 +67,11 @@
 
   <!-- Summarize -->
   <section id="panelSummary" class="card" role="tabpanel" aria-labelledby="tabSummary" hidden>
-    <p class="hint">Pasted notes are used for the summary and are not saved.</p>
+    <h2>Summarize your notes</h2>
+    <p class="hint">Paste at least a few sentences. Choose a brief recap or a detailed study summary.</p>
     <label for="notesInput">Paste your notes</label>
-    <textarea id="notesInput" rows="8" maxlength="{{ max_notes }}"></textarea>
+    <textarea id="notesInput" rows="8" maxlength="{{ max_notes }}"
+              placeholder="Paste your lesson or lecture notes here…"></textarea>
     <label for="summaryLength">Length</label>
     <select id="summaryLength">
       <option value="brief">Brief (bullet points)</option>
@@ -75,7 +80,7 @@
     <p class="review-actions"><button type="button" class="btn" id="summarySend">Summarize</button></p>
     <p class="hint" id="summaryBusy" hidden>Summarizing… this can take a minute.</p>
     <div id="summaryError" class="flash flash-error" role="alert" hidden></div>
-    <div id="summaryOut" class="msg msg-ai" hidden></div>
+    <div id="summaryOut" class="msg msg-ai" aria-live="polite" hidden></div>
   </section>
 </div>
 
